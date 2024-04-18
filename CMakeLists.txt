@@ -30,4 +30,6 @@ endif()
 # Applications.
 #-----------------------------------------------------------------------------------------------------------------------
 
+add_subdirectory("flux-playground")
+
 # code: language="CMake" insertSpaces=true tabSize=4
