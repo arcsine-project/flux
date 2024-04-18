@@ -10,12 +10,54 @@
 #include <cstdlib>
 #include <iostream>
 
-// Function prototypes
-GLFWwindow*    create_window(const char* name, int major, int minor);
-GladGLContext* create_context(GLFWwindow* window);
-void           free_context(GladGLContext* context);
-void           draw(GLFWwindow* window, GladGLContext* context, float r, float g, float b);
-void           key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+
+
+GLFWwindow* create_window(const char* name, int major, int minor) {
+    std::cout << "Creating Window, OpenGL " << major << "." << minor << ": " << name << std::endl;
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, name, NULL, NULL);
+    return window;
+}
+
+GladGLContext* create_context(GLFWwindow* window) {
+    glfwMakeContextCurrent(window);
+
+    GladGLContext* context = reinterpret_cast<GladGLContext*>(std::calloc(1, sizeof(GladGLContext)));
+    if (!context)
+        return NULL;
+
+    int version = gladLoadGLContext(context, glfwGetProcAddress);
+    std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
+              << GLAD_VERSION_MINOR(version) << std::endl;
+
+    return context;
+}
+
+void free_context(GladGLContext* context) {
+    free(context);
+}
+
+void draw(GLFWwindow* window, GladGLContext* gl, float r, float g, float b) {
+    glfwMakeContextCurrent(window);
+
+    gl->ClearColor(r, g, b, 1.0f);
+    gl->Clear(GL_COLOR_BUFFER_BIT);
+
+    glfwSwapBuffers(window);
+}
+
+// Is called whenever a key is pressed/released via GLFW
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
+    (void)scancode;
+    (void)mode;
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+}
 
 // Window dimensions
 const GLuint WIDTH = 400, HEIGHT = 300;
@@ -63,51 +105,4 @@ int main() {
     glfwTerminate();
 
     return 0;
-}
-
-GLFWwindow* create_window(const char* name, int major, int minor) {
-    std::cout << "Creating Window, OpenGL " << major << "." << minor << ": " << name << std::endl;
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, name, NULL, NULL);
-    return window;
-}
-
-GladGLContext* create_context(GLFWwindow* window) {
-    glfwMakeContextCurrent(window);
-
-    GladGLContext* context = reinterpret_cast<GladGLContext*>(std::calloc(1, sizeof(GladGLContext)));
-    if (!context)
-        return NULL;
-
-    int version = gladLoadGLContext(context, glfwGetProcAddress);
-    std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
-              << GLAD_VERSION_MINOR(version) << std::endl;
-
-    return context;
-}
-
-void free_context(GladGLContext* context) {
-    free(context);
-}
-
-void draw(GLFWwindow* window, GladGLContext* gl, float r, float g, float b) {
-    glfwMakeContextCurrent(window);
-
-    gl->ClearColor(r, g, b, 1.0f);
-    gl->Clear(GL_COLOR_BUFFER_BIT);
-
-    glfwSwapBuffers(window);
-}
-
-// Is called whenever a key is pressed/released via GLFW
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
-    (void)scancode;
-    (void)mode;
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
 }
