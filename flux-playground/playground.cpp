@@ -10,8 +10,6 @@
 #include <cstdlib>
 #include <iostream>
 
-
-
 GLFWwindow* create_window(const char* name, int major, int minor) {
     std::cout << "Creating Window, OpenGL " << major << "." << minor << ": " << name << std::endl;
 
@@ -27,7 +25,8 @@ GLFWwindow* create_window(const char* name, int major, int minor) {
 GladGLContext* create_context(GLFWwindow* window) {
     glfwMakeContextCurrent(window);
 
-    GladGLContext* context = reinterpret_cast<GladGLContext*>(std::calloc(1, sizeof(GladGLContext)));
+    GladGLContext* context =
+            reinterpret_cast<GladGLContext*>(std::calloc(1, sizeof(GladGLContext)));
     if (!context)
         return NULL;
 
