@@ -1,6 +1,6 @@
 name: coverage
 
-on: [push, pull_request]
+on: [pull_request]
 
 env:
   BUILD_TYPE: Debug
@@ -19,6 +19,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+        cache: 'pip'
+    - run: pip install -U Jinja2
 
     - name: Get CMake and Ninja
       uses: lukka/get-cmake@latest

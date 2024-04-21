@@ -28,7 +28,7 @@ GladGLContext* create_context(GLFWwindow* window) {
     GladGLContext* context =
             reinterpret_cast<GladGLContext*>(std::calloc(1, sizeof(GladGLContext)));
     if (!context)
-        return NULL;
+        return nullptr;
 
     int version = gladLoadGLContext(context, glfwGetProcAddress);
     std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
