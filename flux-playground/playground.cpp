@@ -10,6 +10,9 @@
 #include <cstdlib>
 #include <iostream>
 
+// Window dimensions
+const GLuint WIDTH = 400, HEIGHT = 300;
+
 GLFWwindow* create_window(const char* name, int major, int minor) {
     std::cout << "Creating Window, OpenGL " << major << "." << minor << ": " << name << std::endl;
 
@@ -57,9 +60,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
-
-// Window dimensions
-const GLuint WIDTH = 400, HEIGHT = 300;
 
 int main() {
     glfwInit();
