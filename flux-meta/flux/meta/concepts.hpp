@@ -75,18 +75,6 @@ concept nothrow_copy_constructible = std::is_nothrow_copy_constructible_v<T>;
 template <typename T>
 concept nothrow_move_constructible = std::is_nothrow_move_constructible_v<T>;
 
-// clang-format off
-// template <typename T>
-// concept copy_constructible =
-//     move_constructible<T>           and
-//     constructible_from<T, T&      > and convertible_to<T&      , T> and
-//     constructible_from<T, T const&> and convertible_to<T const&, T> and
-//     constructible_from<T, T const > and convertible_to<T const , T>;
-//
-// template <typename T>
-// concept move_constructible = constructible_from<T, T> and convertible_to<T, T>;
-// clang-format on
-
 template <typename T>
 concept copy_constructible = std::copy_constructible<T>;
 template <typename T>
