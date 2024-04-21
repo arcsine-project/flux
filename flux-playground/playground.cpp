@@ -10,7 +10,8 @@
 #include <cstdlib>
 #include <iostream>
 
-
+// Window dimensions
+const GLuint WIDTH = 400, HEIGHT = 300;
 
 GLFWwindow* create_window(const char* name, int major, int minor) {
     std::cout << "Creating Window, OpenGL " << major << "." << minor << ": " << name << std::endl;
@@ -27,9 +28,10 @@ GLFWwindow* create_window(const char* name, int major, int minor) {
 GladGLContext* create_context(GLFWwindow* window) {
     glfwMakeContextCurrent(window);
 
-    GladGLContext* context = reinterpret_cast<GladGLContext*>(std::calloc(1, sizeof(GladGLContext)));
+    GladGLContext* context =
+            reinterpret_cast<GladGLContext*>(std::calloc(1, sizeof(GladGLContext)));
     if (!context)
-        return NULL;
+        return nullptr;
 
     int version = gladLoadGLContext(context, glfwGetProcAddress);
     std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
@@ -58,9 +60,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
-
-// Window dimensions
-const GLuint WIDTH = 400, HEIGHT = 300;
 
 int main() {
     glfwInit();
