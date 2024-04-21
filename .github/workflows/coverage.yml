@@ -42,7 +42,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev wayland-protocols libwayland-dev
+        sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev wayland-protocols libwayland-dev libxkbcommon-dev
         sudo apt install libgl-dev
 
     - name: Configure
