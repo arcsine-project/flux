@@ -10,6 +10,7 @@
 // FLUX
 #include <flux/foundation.hpp>
 
+#if defined(_WIN64)
 // clang-format off
 #if __has_cpp_attribute(gnu::dllimport) && !defined(__WINE__)
 [[gnu::dllimport]]
@@ -47,6 +48,7 @@ __asm__("GetConsoleMode")
 #endif
 ;
 // clang-format on
+#endif
 
 // Window dimensions
 GLuint const WIDTH = 400, HEIGHT = 300;
@@ -99,6 +101,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 int main() {
+#if defined(_WIN64)
     constexpr auto std_output_handle                  = static_cast<std::uint_least32_t>(-11);
     constexpr auto enable_processed_output            = static_cast<std::uint_least32_t>(0x0001);
     constexpr auto enable_virtual_terminal_processing = static_cast<std::uint_least32_t>(0x0004);
@@ -109,6 +112,7 @@ int main() {
     console_mode |= enable_processed_output;
     console_mode |= enable_virtual_terminal_processing;
     SetConsoleMode(handle, console_mode);
+#endif
 
     glfwInit();
 
