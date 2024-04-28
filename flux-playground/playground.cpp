@@ -7,22 +7,59 @@
 // GLFW (include after glad)
 #include <GLFW/glfw3.h>
 
-#include <cstdlib>
-#include <iostream>
+// FLUX
+#include <flux/foundation.hpp>
+
+// clang-format off
+#if __has_cpp_attribute(gnu::dllimport) && !defined(__WINE__)
+[[gnu::dllimport]]
+#endif
+#if __has_cpp_attribute(gnu::stdcall) && !defined(__WINE__)
+[[gnu::stdcall]]
+#endif
+extern void* GetStdHandle(std::uint_least32_t) noexcept
+#if defined(FLUX_CLANG)
+__asm__("GetStdHandle")
+#endif
+;
+
+#if __has_cpp_attribute(gnu::dllimport) && !defined(__WINE__)
+[[gnu::dllimport]]
+#endif
+#if __has_cpp_attribute(gnu::stdcall) && !defined(__WINE__)
+[[gnu::stdcall]]
+#endif
+extern int SetConsoleMode(void*, std::uint_least32_t) noexcept
+#if defined(FLUX_CLANG) 
+__asm__("SetConsoleMode")
+#endif
+;
+
+#if __has_cpp_attribute(gnu::dllimport) && !defined(__WINE__)
+[[gnu::dllimport]]
+#endif
+#if __has_cpp_attribute(gnu::stdcall) && !defined(__WINE__)
+[[gnu::stdcall]]
+#endif
+extern int GetConsoleMode(void*, std::uint_least32_t*) noexcept
+#if defined(FLUX_CLANG) 
+__asm__("GetConsoleMode")
+#endif
+;
+// clang-format on
 
 // Window dimensions
-const GLuint WIDTH = 400, HEIGHT = 300;
+GLuint const WIDTH = 400, HEIGHT = 300;
 
-GLFWwindow* create_window(const char* name, int major, int minor) {
-    std::cout << "Creating Window, OpenGL " << major << "." << minor << ": " << name << std::endl;
+GLFWwindow* create_window(char const* name, int major, int minor) {
+    flux::log::debug("Creating Window, OpenGL ", major, ".", minor, ": ", flux::io::c_str(name));
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, name, NULL, NULL);
-    return window;
+    return glfwCreateWindow(WIDTH, HEIGHT, name, NULL, NULL);
 }
 
 GladGLContext* create_context(GLFWwindow* window) {
@@ -34,8 +71,8 @@ GladGLContext* create_context(GLFWwindow* window) {
         return nullptr;
 
     int version = gladLoadGLContext(context, glfwGetProcAddress);
-    std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
-              << GLAD_VERSION_MINOR(version) << std::endl;
+    flux::log::trace("Loaded OpenGL ", GLAD_VERSION_MAJOR(version), ".",
+                     GLAD_VERSION_MINOR(version));
 
     return context;
 }
@@ -62,15 +99,25 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 int main() {
+    constexpr auto std_output_handle                  = static_cast<std::uint_least32_t>(-11);
+    constexpr auto enable_processed_output            = static_cast<std::uint_least32_t>(0x0001);
+    constexpr auto enable_virtual_terminal_processing = static_cast<std::uint_least32_t>(0x0004);
+
+    auto*               handle       = GetStdHandle(std_output_handle);
+    std::uint_least32_t console_mode = 0;
+    GetConsoleMode(handle, &console_mode);
+    console_mode |= enable_processed_output;
+    console_mode |= enable_virtual_terminal_processing;
+    SetConsoleMode(handle, console_mode);
+
     glfwInit();
 
-    GLFWwindow* window1 = create_window("Window 1", 3, 3);
-    GLFWwindow* window2 = create_window("Window 2", 3, 2);
+    GLFWwindow* window1 = create_window("Window 1", 4, 6);
+    GLFWwindow* window2 = create_window("Window 2", 4, 5);
 
     if (!window1 || !window2) {
-        std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        return -1;
+        flux::log::error("Failed to create GLFW window");
     }
 
     glfwSetKeyCallback(window1, key_callback);
@@ -80,9 +127,9 @@ int main() {
     GladGLContext* context2 = create_context(window2);
 
     if (!context1 || !context2) {
-        std::cout << "Failed to initialize GL contexts" << std::endl;
         free_context(context1);
         free_context(context2);
+        flux::log::error("Failed to initialize GL contexts");
     }
 
     glfwMakeContextCurrent(window1);
