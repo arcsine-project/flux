@@ -2,18 +2,12 @@
 
 namespace flux::io {
 
-// clang-format off
-using fast_io::out;
+using ::fast_io::out;
 
-template <typename... Args>
-inline constexpr void print(Args&&... args) noexcept {
-    fast_io::io::print(std::forward<Args>(args)...);
-}
+using ::fast_io::io::print;
+using ::fast_io::io::println;
 
-template <typename... Args>
-inline constexpr void println(Args&&... args) noexcept {
-    fast_io::io::println(std::forward<Args>(args)...);
-}
-// clang-format on
+using ::fast_io::io::panic;
+using ::fast_io::io::panicln;
 
 } // namespace flux::io

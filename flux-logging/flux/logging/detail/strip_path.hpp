@@ -1,6 +1,7 @@
 #pragma once
+#include <cstdint>
 
-namespace flux::fou::detail {
+namespace flux::log::detail {
 
 constexpr bool is_path_sep(char c) noexcept {
     return c == '/' || c == '\\';
@@ -9,8 +10,9 @@ constexpr bool is_path_sep(char c) noexcept {
 constexpr char const* strip_path(char const* path) noexcept {
     auto last_name = path;
     for (auto p = path; *p; ++p) {
-        if (is_path_sep(*p) && *(p + 1))
+        if (is_path_sep(*p) && *(p + 1)) {
             last_name = p + 1;
+        }
     }
     return last_name;
 }
@@ -18,10 +20,11 @@ constexpr char const* strip_path(char const* path) noexcept {
 constexpr char const* last_dot_of(char const* p) noexcept {
     char const* last_dot = nullptr;
     for (; *p; ++p) {
-        if (*p == '.')
+        if (*p == '.') {
             last_dot = p;
+        }
     }
     return last_dot ? last_dot : p;
 }
 
-} // namespace flux::fou::detail
+} // namespace flux::log::detail

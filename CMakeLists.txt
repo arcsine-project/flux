@@ -29,6 +29,7 @@ endif()
 add_subdirectory("flux-config")
 add_subdirectory("flux-foundation")
 add_subdirectory("flux-io")
+add_subdirectory("flux-logging")
 add_subdirectory("flux-meta")
 
 #-----------------------------------------------------------------------------------------------------------------------

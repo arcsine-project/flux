@@ -9,6 +9,7 @@
 
 // FLUX
 #include <flux/foundation.hpp>
+#include <flux/logging.hpp>
 
 #if defined(_WIN64)
 // clang-format off
@@ -115,13 +116,15 @@ int main() {
 #endif
 
     glfwInit();
+    flux::log::info("GLFW initialized successfully.");
 
     GLFWwindow* window1 = create_window("Window 1", 4, 6);
     GLFWwindow* window2 = create_window("Window 2", 4, 5);
 
     if (!window1 || !window2) {
+        flux::log::error("Failed to create GLFW window.");
         glfwTerminate();
-        flux::log::error("Failed to create GLFW window");
+        return -1;
     }
 
     glfwSetKeyCallback(window1, key_callback);
@@ -131,9 +134,10 @@ int main() {
     GladGLContext* context2 = create_context(window2);
 
     if (!context1 || !context2) {
+        flux::log::error("Failed to initialize GL contexts.");
         free_context(context1);
         free_context(context2);
-        flux::log::error("Failed to initialize GL contexts");
+        return -1;
     }
 
     glfwMakeContextCurrent(window1);
