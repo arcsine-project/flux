@@ -15,5 +15,3 @@ comment:
 ignore:
   - "**/*-test.cpp"  # ignore test harness code
   - "**/detail"
-  - "flux-config"
-  - "flux-meta"

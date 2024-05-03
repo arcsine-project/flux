@@ -8,6 +8,8 @@ flux_executable(playground
             glfw::glfw
             glad::glad
             imgui::imgui
+            flux::foundation
+            flux::logging
     WINDOWS
         SOURCE
             "playground.cpp"

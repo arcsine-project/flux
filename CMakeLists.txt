@@ -18,7 +18,7 @@ if(FLUX_ENABLE_COVERAGE)
 
         message(STATUS "Code coverage: ON")
     else()
-        message(ERROR "Code coverage for compiler ${CMAKE_CXX_COMPILER_ID} is unsupported")
+        message(FATAL_ERROR "Code coverage is not supported by the ${CMAKE_CXX_COMPILER_ID} compiler.")
     endif()
 endif()
 
@@ -27,7 +27,9 @@ endif()
 #-----------------------------------------------------------------------------------------------------------------------
 
 add_subdirectory("flux-config")
+add_subdirectory("flux-foundation")
 add_subdirectory("flux-io")
+add_subdirectory("flux-logging")
 add_subdirectory("flux-meta")
 
 #-----------------------------------------------------------------------------------------------------------------------

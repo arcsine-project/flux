@@ -3,17 +3,16 @@
 
 namespace flux::io {
 
-using open_mode = fast_io::open_mode;
+using ::fast_io::ibuf_file;
+using ::fast_io::obuf_file;
+using ::fast_io::open_mode;
 
-using dir  = fast_io::dir_file;
-using pipe = fast_io::pipe;
+using ::fast_io::ibuf_file_mutex;
+using ::fast_io::obuf_file_mutex;
 
-using ibuf_file = fast_io::ibuf_file;
-using obuf_file = fast_io::obuf_file;
+using ::fast_io::io_flush_guard;
 
-using ibuf_file_mutex = fast_io::ibuf_file_mutex;
-using obuf_file_mutex = fast_io::obuf_file_mutex;
-
-using fast_io::io_flush_guard;
+using dir  = ::fast_io::dir_file;
+using pipe = ::fast_io::pipe;
 
 } // namespace flux::io
