@@ -14,5 +14,4 @@ comment:
 
 ignore:
   - "**/*-test.cpp"  # ignore test harness code
-  - "**/utility"
   - "**/detail"
