@@ -637,7 +637,7 @@ target_compile_options(flux::project_settings INTERFACE
     -fno-exceptions
     # Disable generation of information about every class with virtual functions for use by the C++ runtime type
     # identification features (`dynamic_cast' and `typeid').
-    -fno-rtti) 
+    -fno-rtti)
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Sanitizers.
