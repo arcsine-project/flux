@@ -31,7 +31,7 @@ struct [[nodiscard]] source_location final {
     }
 
     constexpr char const* file_name() const noexcept {
-        return file_name_;
+        return detail::strip_path(file_name_);
     }
 
     constexpr char const* function_name() const noexcept {
@@ -79,7 +79,7 @@ print_reserve_define_source_location_impl(char*                        it,
 inline constexpr flux_source_location_scatter
 print_alias_define_source_location_impl(flux::log::source_location location) noexcept {
     using flux::log::detail::strip_path;
-    return {{strip_path(location.file_name()), cstr_len(strip_path(location.file_name()))},
+    return {{location.file_name(), cstr_len(location.file_name())},
             {location.function_name(), cstr_len(location.function_name())},
             location.line(),
             location.column()};
