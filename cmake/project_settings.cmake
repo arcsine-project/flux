@@ -310,6 +310,7 @@ macro(_flux_unit_tests _ARG_NAME _TESTS_SOURCE)
         set(_TESTS flux_${_ARG_NAME}_tests)
         add_executable(${_TESTS})
         target_sources(${_TESTS} PRIVATE "${_TESTS_SOURCE}")
+        target_compile_definitions(${_TESTS} PRIVATE -DCATCH_CONFIG_CONSOLE_WIDTH=300)
         target_link_libraries(${_TESTS}
                               PRIVATE Catch2::Catch2
                                       flux::${_ARG_NAME})
@@ -493,12 +494,12 @@ if(FLUX_TARGET_OS STREQUAL "Windows" AND CMAKE_CXX_COMPILER_ID MATCHES "(C|c)lan
     set(USE_MSVC_RUNTIME_LIBRARY_DLL OFF)
     if(FLUX_BUILD_TYPE STREQUAL "DEBUG")
         string(APPEND CMAKE_C_FLAGS_${FLUX_BUILD_TYPE}   " -D_DEBUG -D_MT -Xclang --dependent-lib=msvcrtd")
-        string(APPEND CMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE} " -D_DEBUG -D_MT -Xclang --dependent-lib=msvcrtd")        
+        string(APPEND CMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE} " -D_DEBUG -D_MT -Xclang --dependent-lib=msvcrtd")
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
         set(FLUX_MSVC_RUNTIME_LIBRARY  "MultiThreadedDebug")
     else()
         string(APPEND CMAKE_C_FLAGS_${FLUX_BUILD_TYPE}   " -D_MT -Xclang --dependent-lib=msvcrt")
-        string(APPEND CMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE} " -D_MT -Xclang --dependent-lib=msvcrt")        
+        string(APPEND CMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE} " -D_MT -Xclang --dependent-lib=msvcrt")
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
         set(FLUX_MSVC_RUNTIME_LIBRARY  "MultiThreaded")
     endif()
@@ -636,7 +637,7 @@ target_compile_options(flux::project_settings INTERFACE
     -fno-exceptions
     # Disable generation of information about every class with virtual functions for use by the C++ runtime type
     # identification features (`dynamic_cast' and `typeid').
-    -fno-rtti)
+    -fno-rtti) 
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Sanitizers.

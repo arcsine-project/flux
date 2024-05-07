@@ -4,6 +4,55 @@ endif()
 
 find_package(Git REQUIRED)
 
+function(flux_bootstrap_config _ARG_NAME _OUT_VAR)
+    cmake_parse_arguments(PARSE_ARGV 0        # start at the 0th argument
+                          _ARG                # variable prefix
+                          ""                  # options
+                          ""                  # one   value keywords
+                          "CATCH2;DEFAULT")   # multi value keywords
+    if (DEFINED _ARG_DEFAULT)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
+    endif()
+
+    set(_FLUX_BOOTSTRAP_ARGUMENTS
+        -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
+        -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
+
+        -DCMAKE_CXX_STANDARD=23
+
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+
+        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+
+        -DCMAKE_C_FLAGS_${FLUX_BUILD_TYPE}=${CMAKE_C_FLAGS_${FLUX_BUILD_TYPE}}
+        -DCMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE}=${CMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE}}
+
+        -DCMAKE_C_LINKER_FLAGS=${CMAKE_C_LINKER_FLAGS}
+        -DCMAKE_CXX_LINKER_FLAGS=${CMAKE_CXX_LINKER_FLAGS}
+    )
+
+    if(FLUX_TARGET_OS STREQUAL "MacOSX")
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}")
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}")
+
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OBJC_COMPILER=${CMAKE_OBJC_COMPILER}")
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OBJCXX_COMPILER=${CMAKE_OBJCXX_COMPILER}")
+
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OBJC_FLAGS=${CMAKE_OBJC_FLAGS}")
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OBJCXX_FLAGS=${CMAKE_OBJCXX_FLAGS}")
+
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OBJC_LINKER_FLAGS=${CMAKE_OBJC_LINKER_FLAGS}")
+        list(APPEND _FLUX_BOOTSTRAP_ARGUMENTS "-DCMAKE_OBJCXX_LINKER_FLAGS=${CMAKE_OBJCXX_LINKER_FLAGS}")
+    endif()
+
+    set(${_OUT_VAR} ${_FLUX_BOOTSTRAP_ARGUMENTS} PARENT_SCOPE)
+endfunction(flux_bootstrap_config)
+
 ########################################################################################################################
 # Update submodules.
 ########################################################################################################################
@@ -24,47 +73,12 @@ endif()
 # CMake arguments that are used to configure thirdparty libraries.
 ########################################################################################################################
 
-set(FLUX_CONFIG_ARGUMENTS
-    -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
-    -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
-
-    -DCMAKE_CXX_STANDARD=23
-
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-
-    -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-
-    -DCMAKE_C_LINKER_FLAGS=${CMAKE_C_LINKER_FLAGS}
-    -DCMAKE_CXX_LINKER_FLAGS=${CMAKE_CXX_LINKER_FLAGS}
-
-    -DCMAKE_C_FLAGS_${FLUX_BUILD_TYPE}=${CMAKE_C_FLAGS_${FLUX_BUILD_TYPE}}
-    -DCMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE}=${CMAKE_CXX_FLAGS_${FLUX_BUILD_TYPE}}
-)
-
-if(FLUX_TARGET_OS STREQUAL "MacOSX")
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}")
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}")
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}")
-
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OBJC_COMPILER=${CMAKE_OBJC_COMPILER}")
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OBJCXX_COMPILER=${CMAKE_OBJCXX_COMPILER}")
-
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OBJC_FLAGS=${CMAKE_OBJC_FLAGS}")
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OBJCXX_FLAGS=${CMAKE_OBJCXX_FLAGS}")
-
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OBJC_LINKER_FLAGS=${CMAKE_OBJC_LINKER_FLAGS}")
-    list(APPEND FLUX_CONFIG_ARGUMENTS "-DCMAKE_OBJCXX_LINKER_FLAGS=${CMAKE_OBJCXX_LINKER_FLAGS}")
-endif()
+flux_bootstrap_config(CATCH2  FLUX_CATCH2_CONFIG_ARGUMENTS) # Catch2 requires some specific settings.
+flux_bootstrap_config(DEFAULT FLUX_CONFIG_ARGUMENTS)
 
 ########################################################################################################################
 # Configure, build, and install Catch2.
 ########################################################################################################################
-
-string(CONCAT FLUX_CATCH2_CONFIG_CONSOLE_WIDTH "${CMAKE_CXX_FLAGS} -DCATCH_CONFIG_CONSOLE_WIDTH=300")
 
 message(" ==============================================================================\n"
         " Configuring Catch2, please wait...\n"
@@ -77,8 +91,7 @@ execute_process(COMMAND ${CMAKE_COMMAND}
                         -DCATCH_BUILD_TESTING=OFF
                         -DCATCH_INSTALL_DOCS=OFF
                         -DCATCH_INSTALL_HELPERS=OFF
-                        ${FLUX_CONFIG_ARGUMENTS}
-                        -DCMAKE_CXX_FLAGS=${FLUX_CATCH2_CONFIG_CONSOLE_WIDTH}
+                        ${FLUX_CATCH2_CONFIG_ARGUMENTS}
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 RESULT_VARIABLE COMMAND_RESULT
                 COMMAND_ECHO STDOUT)
