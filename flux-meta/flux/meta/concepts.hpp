@@ -2,23 +2,23 @@
 
 namespace flux::meta {
 
-using std::common_reference_with;
-using std::constructible_from;
-using std::convertible_to;
-using std::default_initializable;
-using std::derived_from;
-using std::forward_iterator;
-using std::input_iterator;
-using std::integral;
-using std::movable;
-using std::predicate;
-using std::random_access_iterator;
-using std::same_as;
+using ::std::common_reference_with;
+using ::std::constructible_from;
+using ::std::convertible_to;
+using ::std::default_initializable;
+using ::std::derived_from;
+using ::std::forward_iterator;
+using ::std::input_iterator;
+using ::std::integral;
+using ::std::movable;
+using ::std::predicate;
+using ::std::random_access_iterator;
+using ::std::same_as;
 
-template <typename T, std::size_t Size>
+template <typename T, ::std::size_t Size>
 concept same_size = requires { requires sizeof(T) == Size; };
 
-template <typename T, std::size_t Alignment>
+template <typename T, ::std::size_t Alignment>
 concept same_align = requires { requires alignof(T) == Alignment; };
 
 template <typename... Ts>
@@ -27,62 +27,70 @@ concept distinct = are_distinct_v<Ts...>;
 template <typename T, typename... Ts>
 concept contains = is_contains_v<T, Ts...>;
 
-template <typename T>
-concept trivial = std::is_trivial_v<T>;
+template <typename To, typename From>
+concept assignable = ::std::is_assignable_v<To, From>;
+
+template <typename T, typename... Ts>
+concept constructible = ::std::is_constructible_v<T, Ts...>;
+template <typename T, typename... Ts>
+concept nothrow_constructible = ::std::is_nothrow_constructible_v<T, Ts...>;
 
 template <typename T>
-concept standard_layout = std::is_standard_layout_v<T>;
+concept trivial = ::std::is_trivial_v<T>;
 
 template <typename T>
-concept default_constructible = std::is_default_constructible_v<T>;
+concept standard_layout = ::std::is_standard_layout_v<T>;
 
 template <typename T>
-concept trivially_constructible = std::is_trivially_constructible_v<T>;
+concept default_constructible = ::std::is_default_constructible_v<T>;
 
 template <typename T>
-concept trivially_default_constructible = std::is_trivially_default_constructible_v<T>;
-
-template <class T>
-concept trivially_copyable = std::is_trivially_copyable_v<T>;
+concept trivially_constructible = ::std::is_trivially_constructible_v<T>;
 
 template <typename T>
-concept trivially_copy_constructible = std::is_trivially_copy_constructible_v<T>;
-template <typename T>
-concept trivially_move_constructible = std::is_trivially_move_constructible_v<T>;
+concept trivially_default_constructible = ::std::is_trivially_default_constructible_v<T>;
 
 template <typename T>
-concept copy_assignable = std::is_copy_assignable_v<T>;
-template <typename T>
-concept move_assignable = std::is_move_assignable_v<T>;
+concept trivially_copyable = ::std::is_trivially_copyable_v<T>;
 
 template <typename T>
-concept trivially_copy_assignable = std::is_trivially_copy_assignable_v<T>;
+concept trivially_copy_constructible = ::std::is_trivially_copy_constructible_v<T>;
 template <typename T>
-concept trivially_move_assignable = std::is_trivially_move_assignable_v<T>;
+concept trivially_move_constructible = ::std::is_trivially_move_constructible_v<T>;
 
 template <typename T>
-concept trivially_destructible = std::is_trivially_destructible_v<T>;
+concept copy_assignable = ::std::is_copy_assignable_v<T>;
+template <typename T>
+concept move_assignable = ::std::is_move_assignable_v<T>;
+
+template <typename T>
+concept trivially_copy_assignable = ::std::is_trivially_copy_assignable_v<T>;
+template <typename T>
+concept trivially_move_assignable = ::std::is_trivially_move_assignable_v<T>;
+
+template <typename T>
+concept trivially_destructible = ::std::is_trivially_destructible_v<T>;
 template <typename T>
 concept not_trivially_destructible = not trivially_destructible<T>;
 template <typename T>
-concept destructible = std::is_destructible_v<T>;
+concept destructible = ::std::is_destructible_v<T>;
 
 template <typename T>
 concept has_trivial_lifetime = trivially_default_constructible<T> and trivially_destructible<T>;
 
 template <typename T>
-concept nothrow_copy_constructible = std::is_nothrow_copy_constructible_v<T>;
+concept nothrow_copy_constructible = ::std::is_nothrow_copy_constructible_v<T>;
 template <typename T>
-concept nothrow_move_constructible = std::is_nothrow_move_constructible_v<T>;
+concept nothrow_move_constructible = ::std::is_nothrow_move_constructible_v<T>;
 
 template <typename T>
-concept copy_constructible = std::copy_constructible<T>;
+concept copy_constructible = ::std::copy_constructible<T>;
 template <typename T>
-concept move_constructible = std::move_constructible<T>;
+concept move_constructible = ::std::move_constructible<T>;
 
 template <typename T, typename U>
 concept trivially_lexicographically_comparable =
-        same_as<T, U> && sizeof(T) == 1 && std::is_unsigned_v<T>;
+        same_as<remove_cv_t<T>, remove_cv_t<U>> and sizeof(T) == 1 and ::std::is_unsigned_v<T>;
 
 template <typename T, typename U>
 concept trivially_equality_comparable = is_trivially_equality_comparable_v<T, U>;
@@ -98,43 +106,43 @@ concept boolean_testable = detail::boolean_testable_impl<T> and requires(T&& t) 
 };
 
 template <typename T>
-concept abstract = std::is_abstract_v<T>;
+concept abstract = ::std::is_abstract_v<T>;
 template <typename T>
 concept not_abstract = not abstract<T>;
 
 template <typename T>
 concept empty = meta::is_empty_v<T>;
 template <typename T>
-concept object = std::is_object_v<T>;
+concept object = ::std::is_object_v<T>;
 template <typename T>
-concept function = std::is_function_v<T>;
+concept function = ::std::is_function_v<T>;
 template <typename T>
-concept member_function = std::is_member_function_pointer_v<T>;
+concept member_function = ::std::is_member_function_pointer_v<T>;
 
 template <typename T>
-concept reference = std::is_reference_v<T>;
+concept reference = ::std::is_reference_v<T>;
 template <typename T>
 concept not_reference = not reference<T>;
 template <typename T>
-concept pointer = std::is_pointer_v<T>;
+concept pointer = ::std::is_pointer_v<T>;
 template <typename T>
 concept not_pointer = not pointer<T>;
 
 template <typename T>
-concept non_cv = same_as<std::remove_cv_t<T>, T>;
+concept non_cv = same_as<::std::remove_cv_t<T>, T>;
 
 template <typename T>
-concept integer = std::integral<T> and not same_as<remove_cvref_t<T>, bool>;
+concept integer = ::std::integral<T> and not same_as<remove_cvref_t<T>, bool>;
 template <typename T>
-concept unsigned_integer = std::unsigned_integral<T> and not same_as<remove_cvref_t<T>, bool>;
+concept unsigned_integer = ::std::unsigned_integral<T> and not same_as<remove_cvref_t<T>, bool>;
 
 template <typename T, typename U = T>
-concept not_volatile = std::is_volatile_v<T> and std::is_volatile_v<U>;
+concept not_volatile = ::std::is_volatile_v<T> and ::std::is_volatile_v<U>;
 
 template <typename T, typename... Args>
-concept underlying_constructible = std::conjunction_v<is_constructible_from<T, Args>...>;
+concept underlying_constructible = ::std::conjunction_v<is_constructible_from<T, Args>...>;
 
 template <typename T, typename... Args>
-concept only_constructible = requires(Args&&... args) { new T{std::forward<Args>(args)...}; };
+concept only_constructible = requires(Args&&... args) { new T{::std::forward<Args>(args)...}; };
 
 } // namespace flux::meta

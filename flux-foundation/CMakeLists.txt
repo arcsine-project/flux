@@ -1,5 +1,8 @@
 flux_static_library(foundation
     COMMON
+        TEST
+            "flux/foundation/memory/detail/constexpr_memcpy-test.cpp"
+            "flux/foundation/memory/uninitialized_algorithms-test.cpp"
         SOURCE
             "flux/foundation/dummy.cpp"
         LINK
