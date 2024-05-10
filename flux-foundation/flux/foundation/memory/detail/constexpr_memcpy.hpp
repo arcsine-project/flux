@@ -22,6 +22,7 @@ constexpr int constexpr_memcmp(T const* lhs, U const* rhs, ::std::size_t count =
     return __builtin_memcmp(lhs, rhs, count * sizeof(T));
 }
 
+// clang-format off
 template <typename T, typename U>
     requires meta::trivially_equality_comparable<T, U>
 constexpr bool constexpr_memcmp_equal(T const* lhs, U const* rhs, ::std::size_t count = 1) noexcept {
@@ -39,6 +40,7 @@ constexpr bool constexpr_memcmp_equal(T const* lhs, U const* rhs, ::std::size_t 
     }
     return __builtin_memcmp(lhs, rhs, count * sizeof(T)) == 0;
 }
+// clang-format on
 
 // This function performs an assignment to an existing, already alive TriviallyCopyable object
 // from another TriviallyCopyable object.
