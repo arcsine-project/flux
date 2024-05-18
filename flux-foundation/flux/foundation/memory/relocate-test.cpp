@@ -61,7 +61,7 @@ TEST_CASE("fou::relocate_at", "[memory/relocate.hpp]") {
         // After std::memmove
 #if defined(_WIN64)
         CHECK(4 == c1.sc); // windows handles this correctly
-#elif
+#else
         CHECK(4 != c1.sc); // 64, or 0, or anything but 4
 #endif
     }

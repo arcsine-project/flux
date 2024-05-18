@@ -17,9 +17,7 @@ struct [[nodiscard]] advance_fn final {
             // Otherwise, decrements `i` by `-n`.
             advance_backward(i, n);
         } else {
-            if constexpr (not meta::bidirectional_iterator<I>) {
-                FLUX_ASSERT(n >= 0, "negative advance of non-bidirectional iterator");
-            }
+            FLUX_ASSERT(n >= 0, "negative advance of non-bidirectional iterator");
 
             // Otherwise, if `n` is non-negative, increments `i` by `n`.
             advance_forward(i, n);
