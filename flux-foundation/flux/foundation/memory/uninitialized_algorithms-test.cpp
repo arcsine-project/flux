@@ -263,17 +263,19 @@ TEST_CASE("fou::ranges::uninitialized_value_construct", "[memory/uninitialized_a
 
     SECTION("non trivially copyable at run-time") {
         using non_trivially_copyable_array_t = ::std::array<non_trivially_copyable_t, 5>;
+        static_assert(
+                not meta::use_memset_value_construct<non_trivially_copyable_array_t::iterator>);
         {
             non_trivially_copyable_array_t array;
 
-            auto it = ranges::uninitialized_default_construct(array.begin(), array.end());
+            auto it = ranges::uninitialized_value_construct(array.begin(), array.end());
             CHECK(array.end() == it);
             CHECK(array == non_trivially_copyable_array_t{});
         }
         {
             non_trivially_copyable_array_t array;
 
-            auto it = ranges::uninitialized_default_construct(array);
+            auto it = ranges::uninitialized_value_construct(array);
             CHECK(array.end() == it);
             CHECK(array == non_trivially_copyable_array_t{});
         }
@@ -831,33 +833,33 @@ TEST_CASE("fou::ranges::uninitialized_relocate", "[memory/uninitialized_algorith
         int       values[N] = {1, 2, 3, 4, 5};
 
         alignas(relocatable_counter_t) std::byte pool[sizeof(relocatable_counter_t) * N];
-        relocatable_counter_t*                   counted_pointer = (relocatable_counter_t*)pool;
+        relocatable_counter_t*                   counted = (relocatable_counter_t*)pool;
 
         // clang-format off
         auto result = ranges::uninitialized_relocate(InputIterator(values), InputIterator(values + 1),
-                                                     OutputIterator(counted_pointer));
-        CHECK(result == OutputIterator(counted_pointer + 1));
+                                                     OutputIterator(counted));
+        CHECK(result == OutputIterator(counted + 1));
         CHECK(relocatable_counter_t::constructed == 1);
         CHECK(relocatable_counter_t::count == 1);
-        CHECK(counted_pointer[0].value == 1);
+        CHECK(counted[0].value == 1);
         CHECK(values[0] == 0);
 
-        result = ranges::uninitialized_relocate(InputIterator(values + 1), InputIterator(values + N),
-                                                OutputIterator(counted_pointer + 1));
-        CHECK(result == OutputIterator(counted_pointer + N));
+        result = ranges::uninitialized_relocate( InputIterator(values  + 1),  InputIterator(values  + N),
+                                                OutputIterator(counted + 1), OutputIterator(counted + N)).out;
+        CHECK(result == OutputIterator(counted + N));
         CHECK(relocatable_counter_t::count == 5);
         CHECK(relocatable_counter_t::constructed == 5);
-        CHECK(counted_pointer[1].value == 2);
-        CHECK(counted_pointer[2].value == 3);
-        CHECK(counted_pointer[3].value == 4);
-        CHECK(counted_pointer[4].value == 5);
+        CHECK(counted[1].value == 2);
+        CHECK(counted[2].value == 3);
+        CHECK(counted[3].value == 4);
+        CHECK(counted[4].value == 5);
         CHECK(values[1] == 0);
         CHECK(values[2] == 0);
         CHECK(values[3] == 0);
         CHECK(values[4] == 0);
         // clang-format on
 
-        destroy_range(counted_pointer, counted_pointer + N);
+        destroy_range(counted, counted + N);
         CHECK(relocatable_counter_t::count == 0);
     }
 }
@@ -926,32 +928,33 @@ TEST_CASE("fou::ranges::uninitialized_relocate_no_overlap",
         int       values[N] = {1, 2, 3, 4, 5};
 
         alignas(relocatable_counter_t) std::byte pool[sizeof(relocatable_counter_t) * N];
-        relocatable_counter_t*                   counted_pointer = (relocatable_counter_t*)pool;
+        relocatable_counter_t*                   counted = (relocatable_counter_t*)pool;
 
         auto result = ranges::uninitialized_relocate_no_overlap(
-                InputIterator(values), InputIterator(values + 1), OutputIterator(counted_pointer));
-        CHECK(result == OutputIterator(counted_pointer + 1));
+                InputIterator(values), InputIterator(values + 1), OutputIterator(counted));
+        CHECK(result == OutputIterator(counted + 1));
         CHECK(relocatable_counter_t::constructed == 1);
         CHECK(relocatable_counter_t::count == 1);
-        CHECK(counted_pointer[0].value == 1);
+        CHECK(counted[0].value == 1);
         CHECK(values[0] == 0);
 
-        result = ranges::uninitialized_relocate_no_overlap(InputIterator(values + 1),
-                                                           InputIterator(values + N),
-                                                           OutputIterator(counted_pointer + 1));
-        CHECK(result == OutputIterator(counted_pointer + N));
+        result = ranges::uninitialized_relocate_no_overlap(
+                         InputIterator(values + 1), InputIterator(values + N),
+                         OutputIterator(counted + 1), OutputIterator(counted + N))
+                         .out;
+        CHECK(result == OutputIterator(counted + N));
         CHECK(relocatable_counter_t::count == 5);
         CHECK(relocatable_counter_t::constructed == 5);
-        CHECK(counted_pointer[1].value == 2);
-        CHECK(counted_pointer[2].value == 3);
-        CHECK(counted_pointer[3].value == 4);
-        CHECK(counted_pointer[4].value == 5);
+        CHECK(counted[1].value == 2);
+        CHECK(counted[2].value == 3);
+        CHECK(counted[3].value == 4);
+        CHECK(counted[4].value == 5);
         CHECK(values[1] == 0);
         CHECK(values[2] == 0);
         CHECK(values[3] == 0);
         CHECK(values[4] == 0);
 
-        destroy_range(counted_pointer, counted_pointer + N);
+        destroy_range(counted, counted + N);
         CHECK(relocatable_counter_t::count == 0);
     }
 }
