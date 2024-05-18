@@ -16,6 +16,7 @@ struct [[nodiscard]] uninitialized_default_construct_fn final {
             for (; first != last; ++first) {
                 detail::construct_at<ValueType>(detail::to_address(first));
             }
+            return first;
         } else {
             if constexpr (meta::trivially_default_constructible<ValueType>) {
                 return ranges::next(first, last);
@@ -23,9 +24,9 @@ struct [[nodiscard]] uninitialized_default_construct_fn final {
                 for (; first != last; ++first) {
                     ::new (static_cast<void*>(detail::to_address(first))) ValueType;
                 }
+                return first;
             }
         }
-        return first;
     }
 
     template <meta::nothrow_forward_range Range>
@@ -44,6 +45,7 @@ struct [[nodiscard]] uninitialized_default_construct_n_fn final {
             for (; n > 0; ++first, (void)--n) {
                 detail::construct_at<ValueType>(detail::to_address(first));
             }
+            return first;
         } else {
             if constexpr (meta::trivially_default_constructible<ValueType>) {
                 return ranges::next(first, n);
@@ -51,9 +53,9 @@ struct [[nodiscard]] uninitialized_default_construct_n_fn final {
                 for (; n > 0; ++first, (void)--n) {
                     ::new (static_cast<void*>(detail::to_address(first))) ValueType;
                 }
+                return first;
             }
         }
-        return first;
     }
 };
 
