@@ -16,6 +16,10 @@ using ::std::remove_cvref_t;
 using ::std::true_type;
 using ::std::tuple;
 using ::std::void_t;
+using ::std::ranges::borrowed_iterator_t;
+using ::std::ranges::iterator_t;
+using ::std::ranges::range_value_t;
+using ::std::ranges::sentinel_t;
 
 // clang-format off
 template <typename T>
@@ -25,6 +29,18 @@ using common_type = ::std::common_type_t<T...>;
 
 template <typename T>
 using iter_diff_t = ::std::iter_difference_t<T>;
+template <typename T>
+using iter_ref_t = ::std::iter_reference_t<T>;
+template <typename T>
+using iter_rvref_t = ::std::iter_rvalue_reference_t<T>;
+
+template <typename T>
+using range_ref_t = ::std::ranges::range_reference_t<T>;
+template <typename T>
+using range_rvref_t = ::std::ranges::range_rvalue_reference_t<T>;
+
+template <typename T>
+using borrowed_iter_t = ::std::ranges::borrowed_iterator_t<T>;
 
 template <typename T>
 inline constexpr bool is_array_v = ::std::is_array_v<T>;

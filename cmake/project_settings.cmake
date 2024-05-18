@@ -594,8 +594,6 @@ target_compile_options(flux::project_settings INTERFACE
     -Wshadow
     # Warn whenever a class has virtual functions and an accessible non-virtual destructor.
     -Wnon-virtual-dtor
-    # Warn if old-style (C-style) cast to a non-void type is used within a C++ program.
-    -Wold-style-cast
     # Warn whenever a pointer is cast such that the required alignment of the target is increased. For example, warn if
     # a char* is cast to an int* on machines where integers can only be accessed at two- or four-byte boundaries.
     -Wcast-align

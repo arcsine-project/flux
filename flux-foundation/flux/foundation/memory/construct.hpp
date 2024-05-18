@@ -20,7 +20,7 @@ constexpr void construct_in_place(Iterator iterator, Args&&... args) noexcept {
 template <meta::forward_iterator Iterator>
 constexpr Iterator destroy_range(Iterator first, Iterator last) noexcept {
     for (; first != last; ++first) {
-        detail::destroy_at(addressof(*first));
+        detail::destroy_at(detail::to_address(first));
     }
     return first;
 }
@@ -29,7 +29,7 @@ template <meta::input_iterator Iterator>
 constexpr void destroy_in_place(Iterator iterator) noexcept {
     using value_type = meta::iter_value_t<Iterator>;
     if constexpr (meta::not_trivially_destructible<value_type>) {
-        detail::destroy_at(addressof(*iterator));
+        detail::destroy_at(detail::to_address(iterator));
     }
 }
 

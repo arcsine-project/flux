@@ -49,4 +49,20 @@ constexpr void destroy_at(T* const location) noexcept {
 // clang-format on
 
 } // namespace detail
+
+// clang-format off
+template <typename T>
+constexpr T* default_construct_at(T* const p) noexcept {
+    if consteval {
+        return detail::construct_at(p);
+    }
+    return ::new (static_cast<void*>(p)) T;
+}
+
+template <typename T>
+constexpr T* value_construct_at(T* const p) noexcept {
+    return detail::construct_at(p);
+}
+// clang-format on
+
 } // namespace flux::fou

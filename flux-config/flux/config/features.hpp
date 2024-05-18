@@ -6,6 +6,16 @@
 #    define FLUX_NO_SANITIZE(...)
 #endif
 
+#if __has_cpp_attribute(__gnu__::__always_inline__)
+#    define FLUX_ALWAYS_INLINE [[__gnu__::__always_inline__]]
+#elif __has_cpp_attribute(clang::always_inline)
+#    define FLUX_ALWAYS_INLINE [[clang::always_inline]]
+#elif __has_cpp_attribute(msvc::forceinline)
+#    define FLUX_ALWAYS_INLINE [[msvc::forceinline]]
+#else
+#    define FLUX_ALWAYS_INLINE /* nothing */
+#endif
+
 #if __has_cpp_attribute(msvc::no_unique_address)
 // MSVC implements [[no_unique_address]] as a silent no-op currently. If/when MSVC breaks its C++
 // ABI, it will be changed to work as intended. However, MSVC implements [[msvc::no_unique_address]]

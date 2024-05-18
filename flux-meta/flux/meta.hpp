@@ -1,6 +1,7 @@
 #pragma once
 #include <concepts>
 #include <iterator>
+#include <ranges>
 #include <tuple>
 #include <type_traits>
 
