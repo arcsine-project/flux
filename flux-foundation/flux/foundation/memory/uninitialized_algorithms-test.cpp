@@ -151,12 +151,14 @@ TEST_CASE("fou::ranges::uninitialized_default_construct", "[memory/uninitialized
                 ::std::array<non_trivially_default_constructible_t, 5>;
         {
             non_trivially_default_constructible_array_t array;
-            ranges::uninitialized_default_construct(array.begin(), array.end());
+            auto it = ranges::uninitialized_default_construct(array.begin(), array.end());
+            CHECK(array.end() == it);
             CHECK(array == non_trivially_default_constructible_array_t{});
         }
         {
             non_trivially_default_constructible_array_t array;
-            ranges::uninitialized_default_construct(array);
+            auto it = ranges::uninitialized_default_construct(array);
+            CHECK(array.end() == it);
             CHECK(array == non_trivially_default_constructible_array_t{});
         }
     }
@@ -200,7 +202,8 @@ TEST_CASE("fou::ranges::uninitialized_default_construct_n",
         using non_trivially_default_constructible_array_t =
                 ::std::array<non_trivially_default_constructible_t, 5>;
         non_trivially_default_constructible_array_t array;
-        ranges::uninitialized_default_construct_n(array.begin(), array.size());
+        auto it = ranges::uninitialized_default_construct_n(array.begin(), array.size());
+        CHECK(array.end() == it);
         CHECK(array == non_trivially_default_constructible_array_t{});
     }
 }
