@@ -5,7 +5,7 @@
 struct test_io_device {
     using char_type = char;
 
-    std::string buffer;
+    ::std::string buffer;
 };
 
 template <typename Iter>
@@ -68,5 +68,5 @@ TEST_CASE("io::c_str", "[flux-io/manipulators.hpp]") {
 
     char const* p = "hello";
     io::print(device, io::c_str(p));
-    CHECK(device.buffer == std::string{"hello"});
+    CHECK(device.buffer == ::std::string{"hello"});
 }
