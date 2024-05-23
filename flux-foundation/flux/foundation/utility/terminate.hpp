@@ -12,7 +12,7 @@ namespace flux::fou {
 #elif __has_builtin(__builtin_abort)
     __builtin_abort();
 #else
-    std::abort();
+    ::std::abort();
 #endif
 }
 

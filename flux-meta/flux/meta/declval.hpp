@@ -10,7 +10,7 @@ template <typename T>
 constexpr auto declval() noexcept -> T;
 
 template <typename T>
-    requires(std::is_function_v<std::remove_cv_t<T>> or std::is_array_v<std::remove_cv_t<T>>)
+    requires(::std::is_function_v<::std::remove_cv_t<T>> or ::std::is_array_v<::std::remove_cv_t<T>>)
 constexpr auto declval() noexcept -> T&&;
 // clang-format on
 
