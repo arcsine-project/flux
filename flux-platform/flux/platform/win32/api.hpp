@@ -98,4 +98,4 @@ __asm__("HeapReAlloc")
 ;
 // clang-format on
 
-} // namespace salt::win32
+} // namespace flux::win32
