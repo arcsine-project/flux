@@ -49,7 +49,7 @@ struct C : B {
 };
 static_assert(meta::trivially_copyable<A> and meta::trivially_relocatable<C>);
 
-TEST_CASE("fou::relocate_at", "[memory/relocate.hpp]") {
+TEST_CASE("fou::relocate_at", "[flux-memory/relocate.hpp]") {
     SECTION("trivially copyable/relocatable at run-time (std::memmove)") {
         C  c1 = {{{1}, 2, 3}, 4};
         B& b1 = c1;

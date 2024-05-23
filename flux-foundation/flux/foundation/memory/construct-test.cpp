@@ -14,7 +14,7 @@ struct B {
     char  c;
 };
 
-TEST_CASE("fou::construct_in_place", "[memory/construct.hpp]") {
+TEST_CASE("fou::construct_in_place", "[flux-memory/construct.hpp]") {
     SECTION("construct in place lvalue") {
         alignas(A) std::byte buffer[sizeof(A)];
         A*                   object = (A*)buffer;

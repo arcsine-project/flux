@@ -62,7 +62,7 @@ consteval int storage_accessors() noexcept {
     return value;
 }
 
-TEST_CASE("fou::uninitialized_storage", "[memory/uninitialized_storage.hpp]") {
+TEST_CASE("fou::uninitialized_storage", "[flux-memory/uninitialized_storage.hpp]") {
     SECTION("evaluate in constant expression") {
         STATIC_REQUIRE(10 == storage_construct());
         STATIC_REQUIRE(20 == storage_accessors());

@@ -92,7 +92,8 @@ int non_trivially_movable_counter_t::constructed = 0;
 static_assert(not meta::trivially_copyable<non_trivially_movable_counter_t>);
 using relocatable_counter_t = non_trivially_movable_counter_t;
 
-TEST_CASE("fou::ranges::uninitialized_default_construct", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_default_construct",
+          "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially default constructible at compile-time") {
@@ -165,7 +166,7 @@ TEST_CASE("fou::ranges::uninitialized_default_construct", "[memory/uninitialized
 }
 
 TEST_CASE("fou::ranges::uninitialized_default_construct_n",
-          "[memory/uninitialized_algorithms.hpp]") {
+          "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially default constructible at compile-time") {
@@ -208,7 +209,8 @@ TEST_CASE("fou::ranges::uninitialized_default_construct_n",
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_value_construct", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_value_construct",
+          "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially copyable at compile-time") {
@@ -285,7 +287,8 @@ TEST_CASE("fou::ranges::uninitialized_value_construct", "[memory/uninitialized_a
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_value_construct_n", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_value_construct_n",
+          "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially copyable at compile-time") {
@@ -328,7 +331,7 @@ TEST_CASE("fou::ranges::uninitialized_value_construct_n", "[memory/uninitialized
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_copy", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_copy", "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially copyable at compile-time (memmove initialization)") {
@@ -458,7 +461,8 @@ TEST_CASE("fou::ranges::uninitialized_copy", "[memory/uninitialized_algorithms.h
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_copy_no_overlap", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_copy_no_overlap",
+          "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially copyable at compile-time (memcpy initialization)") {
@@ -590,7 +594,7 @@ TEST_CASE("fou::ranges::uninitialized_copy_no_overlap", "[memory/uninitialized_a
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_copy_n", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_copy_n", "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially copyable at compile-time (memmove initialization)") {
@@ -644,7 +648,7 @@ TEST_CASE("fou::ranges::uninitialized_copy_n", "[memory/uninitialized_algorithms
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_move", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_move", "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially movable at compile-time (memmove initialization)") {
@@ -720,7 +724,7 @@ TEST_CASE("fou::ranges::uninitialized_move", "[memory/uninitialized_algorithms.h
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_move_n", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_move_n", "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially movable at compile-time (memmove initialization)") {
@@ -774,7 +778,7 @@ TEST_CASE("fou::ranges::uninitialized_move_n", "[memory/uninitialized_algorithms
     }
 }
 
-TEST_CASE("fou::ranges::uninitialized_relocate", "[memory/uninitialized_algorithms.hpp]") {
+TEST_CASE("fou::ranges::uninitialized_relocate", "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially relocatable at compile-time (memmove initialization)") {
@@ -868,7 +872,7 @@ TEST_CASE("fou::ranges::uninitialized_relocate", "[memory/uninitialized_algorith
 }
 
 TEST_CASE("fou::ranges::uninitialized_relocate_no_overlap",
-          "[memory/uninitialized_algorithms.hpp]") {
+          "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
 
     SECTION("trivially relocatable at compile-time (memmove initialization)") {
