@@ -13,7 +13,7 @@ constexpr void write(test_io_device& device, Iter begin, Iter end) noexcept {
     device.buffer.assign(begin, end);
 }
 
-TEST_CASE("flux::io::print", "[flux-io/print.hpp]") {
+TEST_CASE("io::print", "[flux-io/print.hpp]") {
     using namespace flux;
 
     SECTION("string literal") {
@@ -33,7 +33,7 @@ TEST_CASE("flux::io::print", "[flux-io/print.hpp]") {
     }
 }
 
-TEST_CASE("flux::io::println", "[flux-io/print.hpp]") {
+TEST_CASE("io::println", "[flux-io/print.hpp]") {
     using namespace flux;
 
     SECTION("string literal") {

@@ -26,7 +26,7 @@ struct C : A, B {};
 
 void foo() noexcept {}
 
-TEST_CASE("flux::io::address", "[flux-io/manipulators.hpp]") {
+TEST_CASE("io::address", "[flux-io/manipulators.hpp]") {
     using namespace flux;
 
     SECTION("integer values") {
@@ -62,7 +62,7 @@ TEST_CASE("flux::io::address", "[flux-io/manipulators.hpp]") {
     }
 }
 
-TEST_CASE("flux::io::c_str", "[flux-io/manipulators.hpp]") {
+TEST_CASE("io::c_str", "[flux-io/manipulators.hpp]") {
     using namespace flux;
     test_io_device device;
 
