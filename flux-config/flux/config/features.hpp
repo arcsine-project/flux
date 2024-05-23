@@ -16,6 +16,12 @@
 #    define FLUX_ALWAYS_INLINE /* nothing */
 #endif
 
+#if (!__has_cpp_attribute(__gnu__::__stdcall__) && !defined(__WINE__)) && defined(_MSC_VER)
+#    define FLUX_STDCALL __stdcall
+#else
+#    define FLUX_STDCALL /* nothing */
+#endif
+
 #if __has_cpp_attribute(msvc::no_unique_address)
 // MSVC implements [[no_unique_address]] as a silent no-op currently. If/when MSVC breaks its C++
 // ABI, it will be changed to work as intended. However, MSVC implements [[msvc::no_unique_address]]

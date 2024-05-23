@@ -9,6 +9,7 @@ flux_static_library(foundation
         SOURCE
             "flux/foundation/dummy.cpp"
         LINK
-            flux::io)
+            flux::io
+            flux::platform)
 
 # code: language="CMake" insertSpaces=true tabSize=4

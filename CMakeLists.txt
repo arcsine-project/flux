@@ -31,6 +31,7 @@ add_subdirectory("flux-foundation")
 add_subdirectory("flux-io")
 add_subdirectory("flux-logging")
 add_subdirectory("flux-meta")
+add_subdirectory("flux-platform")
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Applications.

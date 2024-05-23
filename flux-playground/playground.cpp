@@ -12,43 +12,7 @@
 #include <flux/logging.hpp>
 
 #if defined(_WIN64)
-// clang-format off
-#if __has_cpp_attribute(gnu::dllimport) && !defined(__WINE__)
-[[gnu::dllimport]]
-#endif
-#if __has_cpp_attribute(gnu::stdcall) && !defined(__WINE__)
-[[gnu::stdcall]]
-#endif
-extern void* GetStdHandle(std::uint_least32_t) noexcept
-#if defined(FLUX_CLANG)
-__asm__("GetStdHandle")
-#endif
-;
-
-#if __has_cpp_attribute(gnu::dllimport) && !defined(__WINE__)
-[[gnu::dllimport]]
-#endif
-#if __has_cpp_attribute(gnu::stdcall) && !defined(__WINE__)
-[[gnu::stdcall]]
-#endif
-extern int SetConsoleMode(void*, std::uint_least32_t) noexcept
-#if defined(FLUX_CLANG) 
-__asm__("SetConsoleMode")
-#endif
-;
-
-#if __has_cpp_attribute(gnu::dllimport) && !defined(__WINE__)
-[[gnu::dllimport]]
-#endif
-#if __has_cpp_attribute(gnu::stdcall) && !defined(__WINE__)
-[[gnu::stdcall]]
-#endif
-extern int GetConsoleMode(void*, std::uint_least32_t*) noexcept
-#if defined(FLUX_CLANG) 
-__asm__("GetConsoleMode")
-#endif
-;
-// clang-format on
+#    include <flux/platform/win32/api.hpp>
 #endif
 
 // Window dimensions
@@ -107,12 +71,12 @@ int main() {
     constexpr auto enable_processed_output            = static_cast<std::uint_least32_t>(0x0001);
     constexpr auto enable_virtual_terminal_processing = static_cast<std::uint_least32_t>(0x0004);
 
-    auto*               handle       = GetStdHandle(std_output_handle);
+    auto*               handle       = flux::win32::GetStdHandle(std_output_handle);
     std::uint_least32_t console_mode = 0;
-    GetConsoleMode(handle, &console_mode);
+    flux::win32::GetConsoleMode(handle, &console_mode);
     console_mode |= enable_processed_output;
     console_mode |= enable_virtual_terminal_processing;
-    SetConsoleMode(handle, console_mode);
+    flux::win32::SetConsoleMode(handle, console_mode);
 #endif
 
     glfwInit();
