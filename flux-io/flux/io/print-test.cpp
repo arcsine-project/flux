@@ -5,7 +5,7 @@
 struct test_io_device {
     using char_type = char;
 
-    std::string buffer;
+    ::std::string buffer;
 };
 
 template <typename Iter>
@@ -20,7 +20,7 @@ TEST_CASE("io::print", "[flux-io/print.hpp]") {
         test_io_device device;
 
         io::print(device, "test");
-        CHECK(device.buffer == std::string{"test"});
+        CHECK(device.buffer == ::std::string{"test"});
     }
 
     SECTION("integer values") {
@@ -29,7 +29,7 @@ TEST_CASE("io::print", "[flux-io/print.hpp]") {
         int a = 1;
         int b = 2;
         io::print(device, a, b, 3);
-        CHECK(device.buffer == std::string{"123"});
+        CHECK(device.buffer == ::std::string{"123"});
     }
 }
 
@@ -40,7 +40,7 @@ TEST_CASE("io::println", "[flux-io/print.hpp]") {
         test_io_device device;
 
         io::println(device, "test");
-        CHECK(device.buffer == std::string{"test\n"});
+        CHECK(device.buffer == ::std::string{"test\n"});
     }
 
     SECTION("integer values") {
@@ -49,6 +49,6 @@ TEST_CASE("io::println", "[flux-io/print.hpp]") {
         int a = 1;
         int b = 2;
         io::println(device, a, b, 3);
-        CHECK(device.buffer == std::string{"123\n"});
+        CHECK(device.buffer == ::std::string{"123\n"});
     }
 }

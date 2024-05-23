@@ -39,8 +39,8 @@ template <typename... Args> struct [[maybe_unused]] trace final {
             [[maybe_unused]] to_console      output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_console>().log(color::cyan, "[TRACE]", std::forward_as_tuple(std::move(args)...),
-                                 location);
+        logger<to_console>().log(color::cyan, "[TRACE]",
+                                 ::std::forward_as_tuple(::std::move(args)...), location);
     }
 
     // Explicitly writes the trace log to the file.
@@ -48,7 +48,7 @@ template <typename... Args> struct [[maybe_unused]] trace final {
             [[maybe_unused]] to_file         output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_file>().log(color::cyan, "[TRACE]", std::forward_as_tuple(std::move(args)...),
+        logger<to_file>().log(color::cyan, "[TRACE]", ::std::forward_as_tuple(::std::move(args)...),
                               location);
     }
 
@@ -56,7 +56,7 @@ template <typename... Args> struct [[maybe_unused]] trace final {
     constexpr explicit trace(
             [[maybe_unused]] Args&&... args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept
-            : trace(out::console, std::forward<Args>(args)..., location) {}
+            : trace(out::console, ::std::forward<Args>(args)..., location) {}
 };
 
 template <typename... Args> struct [[maybe_unused]] debug final {
@@ -65,8 +65,8 @@ template <typename... Args> struct [[maybe_unused]] debug final {
             [[maybe_unused]] to_console      output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_console>().log(color::purple, "[DEBUG]", std::forward_as_tuple(std::move(args)...),
-                                 location);
+        logger<to_console>().log(color::purple, "[DEBUG]",
+                                 ::std::forward_as_tuple(::std::move(args)...), location);
     }
 
     // Explicitly writes the debug log to the file.
@@ -74,15 +74,15 @@ template <typename... Args> struct [[maybe_unused]] debug final {
             [[maybe_unused]] to_file         output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_file>().log(color::purple, "[DEBUG]", std::forward_as_tuple(std::move(args)...),
-                              location);
+        logger<to_file>().log(color::purple, "[DEBUG]",
+                              ::std::forward_as_tuple(::std::move(args)...), location);
     }
 
     // Writes the debug log to the console by default.
     constexpr explicit debug(
             [[maybe_unused]] Args&&... args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept
-            : debug(out::console, std::forward<Args>(args)..., location) {}
+            : debug(out::console, ::std::forward<Args>(args)..., location) {}
 };
 
 template <typename... Args> struct [[maybe_unused]] info final {
@@ -91,8 +91,8 @@ template <typename... Args> struct [[maybe_unused]] info final {
             [[maybe_unused]] to_console      output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_console>().log(color::gray, "[INFO]", std::forward_as_tuple(std::move(args)...),
-                                 location);
+        logger<to_console>().log(color::gray, "[INFO]",
+                                 ::std::forward_as_tuple(::std::move(args)...), location);
     }
 
     // Explicitly writes the info log to the file.
@@ -100,7 +100,7 @@ template <typename... Args> struct [[maybe_unused]] info final {
             [[maybe_unused]] to_file         output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_file>().log(color::gray, "[INFO]", std::forward_as_tuple(std::move(args)...),
+        logger<to_file>().log(color::gray, "[INFO]", ::std::forward_as_tuple(::std::move(args)...),
                               location);
     }
 
@@ -108,7 +108,7 @@ template <typename... Args> struct [[maybe_unused]] info final {
     constexpr explicit info(
             [[maybe_unused]] Args&&... args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept
-            : info(out::console, std::forward<Args>(args)..., location) {}
+            : info(out::console, ::std::forward<Args>(args)..., location) {}
 };
 
 template <typename... Args> struct [[maybe_unused]] warn final {
@@ -117,8 +117,8 @@ template <typename... Args> struct [[maybe_unused]] warn final {
             [[maybe_unused]] to_console      output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_console>().log(color::yellow, "[WARNING]", std::forward_as_tuple(std::move(args)...),
-                                 location);
+        logger<to_console>().log(color::yellow, "[WARNING]",
+                                 ::std::forward_as_tuple(::std::move(args)...), location);
     }
 
     // Explicitly writes the warning log to the file.
@@ -126,15 +126,15 @@ template <typename... Args> struct [[maybe_unused]] warn final {
             [[maybe_unused]] to_file         output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_file>().log(color::yellow, "[WARNING]", std::forward_as_tuple(std::move(args)...),
-                              location);
+        logger<to_file>().log(color::yellow, "[WARNING]",
+                              ::std::forward_as_tuple(::std::move(args)...), location);
     }
 
     // Writes the warning log to the console by default.
     constexpr explicit warn(
             [[maybe_unused]] Args&&... args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept
-            : warn(out::console, std::forward<Args>(args)..., location) {}
+            : warn(out::console, ::std::forward<Args>(args)..., location) {}
 };
 
 template <typename... Args> struct [[maybe_unused]] error final {
@@ -143,8 +143,8 @@ template <typename... Args> struct [[maybe_unused]] error final {
             [[maybe_unused]] to_console      output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_console>().log(color::red, "[ERROR]", std::forward_as_tuple(std::move(args)...),
-                                 location);
+        logger<to_console>().log(color::red, "[ERROR]",
+                                 ::std::forward_as_tuple(::std::move(args)...), location);
     }
 
     // Explicitly writes the error log to the file.
@@ -152,7 +152,7 @@ template <typename... Args> struct [[maybe_unused]] error final {
             [[maybe_unused]] to_file         output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_file>().log(color::red, "[ERROR]", std::forward_as_tuple(std::move(args)...),
+        logger<to_file>().log(color::red, "[ERROR]", ::std::forward_as_tuple(::std::move(args)...),
                               location);
     }
 
@@ -160,7 +160,7 @@ template <typename... Args> struct [[maybe_unused]] error final {
     constexpr explicit error(
             [[maybe_unused]] Args&&... args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept
-            : error(out::console, std::forward<Args>(args)..., location) {}
+            : error(out::console, ::std::forward<Args>(args)..., location) {}
 };
 
 template <typename... Args> struct [[maybe_unused]] fatal final {
@@ -169,8 +169,8 @@ template <typename... Args> struct [[maybe_unused]] fatal final {
             [[maybe_unused]] to_console      output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_console>().log(color::crimson, "[FATAL]", std::forward_as_tuple(std::move(args)...),
-                                 location);
+        logger<to_console>().log(color::crimson, "[FATAL]",
+                                 ::std::forward_as_tuple(::std::move(args)...), location);
         fou::fast_terminate();
     }
 
@@ -179,8 +179,8 @@ template <typename... Args> struct [[maybe_unused]] fatal final {
             [[maybe_unused]] to_file         output,
             [[maybe_unused]] Args&&...       args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept {
-        logger<to_file>().log(color::crimson, "[FATAL]", std::forward_as_tuple(std::move(args)...),
-                              location);
+        logger<to_file>().log(color::crimson, "[FATAL]",
+                              ::std::forward_as_tuple(::std::move(args)...), location);
         fou::fast_terminate();
     }
 
@@ -188,7 +188,7 @@ template <typename... Args> struct [[maybe_unused]] fatal final {
     constexpr explicit fatal(
             [[maybe_unused]] Args&&... args,
             [[maybe_unused]] source_location location = source_location::current()) noexcept
-            : fatal(out::console, std::forward<Args>(args)..., location) {}
+            : fatal(out::console, ::std::forward<Args>(args)..., location) {}
 };
 // clang-format on
 
