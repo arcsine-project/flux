@@ -1,4 +1,6 @@
 #pragma once
+#include <flux/foundation/memory/allocator_traits.hpp>
+#include <flux/foundation/memory/detail/construct_at.hpp>
 #include <flux/foundation/memory/detail/debug_helpers.hpp>
 #include <flux/foundation/memory/memory_block.hpp>
 

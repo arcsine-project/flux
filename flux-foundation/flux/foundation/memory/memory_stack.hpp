@@ -1,7 +1,9 @@
 #pragma once
 #define SALT_MEMORY_STACK_HAS_MIN_BLOCK_SIZE (1)
 
+#include <flux/foundation/memory/default_allocator.hpp>
 #include <flux/foundation/memory/detail/fixed_stack.hpp>
+#include <flux/foundation/memory/memory_arena.hpp>
 
 namespace flux::fou {
 

@@ -1,5 +1,9 @@
 #pragma once
+#include <flux/meta.hpp>
+
 #include <climits>
+#include <cstddef>
+#include <cstdint>
 
 namespace flux::fou {
 
@@ -48,7 +52,8 @@ constexpr ::std::size_t ilog2_ceil(::std::size_t value) noexcept {
 }
 
 constexpr ::std::size_t alignment_for(::std::size_t size) noexcept {
-    return size >= detail::max_alignment ? detail::max_alignment : (::std::size_t{1} << ilog2(size));
+    return size >= detail::max_alignment ? detail::max_alignment
+                                         : (::std::size_t{1} << ilog2(size));
 }
 
 constexpr ::std::size_t align_offset(::std::uintptr_t address, ::std::size_t alignment) noexcept {
@@ -64,4 +69,4 @@ inline bool is_aligned(void* ptr, ::std::size_t alignment) noexcept {
     return reinterpret_cast<::std::uintptr_t>(ptr) % alignment == 0ull;
 }
 
-} // namespace salt::ext
+} // namespace flux::fou

@@ -1,4 +1,7 @@
 #pragma once
+#include <flux/config.hpp>
+#include <flux/io.hpp>
+
 #include <flux/foundation/memory/detail/fixed_stack.hpp>
 #include <flux/foundation/memory/memory_block.hpp>
 
