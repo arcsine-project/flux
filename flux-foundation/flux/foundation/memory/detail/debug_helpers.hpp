@@ -3,6 +3,7 @@
 #include <flux/meta.hpp>
 
 #include <atomic>
+#include <utility>
 
 namespace flux::fou {
 

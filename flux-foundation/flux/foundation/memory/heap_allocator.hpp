@@ -11,7 +11,7 @@ using heap_allocator_impl = win32_heap_allocator;
 FLUX_MEMORY_LL_ALLOCATOR_LEAK_HANDLER(heap_allocator_impl, heap_allocator_leak_detector);
 } // namespace flux::fou::detail
 #else
-#    include <flux/foundation/detail/malloc_allocator.hpp>
+#    include <flux/foundation/memory/detail/malloc_allocator.hpp>
 namespace flux::fou::detail {
 using heap_allocator_impl = malloc_allocator;
 FLUX_MEMORY_LL_ALLOCATOR_LEAK_HANDLER(heap_allocator_impl, heap_allocator_leak_detector);

@@ -142,4 +142,4 @@ template <typename Mutex>
 using lock_guard_t = meta::condition<meta::same_as<Mutex, no_mutex>,
                                      detail::dummy_lock_guard<Mutex>, ::std::lock_guard<Mutex>>;
 
-} // namespace salt::ext
+} // namespace flux::fou
