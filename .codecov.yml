@@ -16,4 +16,9 @@ ignore:
   - "**/*-test.cpp"  # ignore test harness code
   - "**/config/*"
   - "**/detail/*"
+  - "**/foundation/memory/allocator_traits.hpp"
+  - "**/foundation/memory/debugging.*"
+  - "**/foundation/memory/memory_pool_type.hpp"
+  - "**/foundation/memory/temporary_allocator.*"
+  - "**/foundation/memory/threading.hpp"
   - "**/foundation/utility/*"
