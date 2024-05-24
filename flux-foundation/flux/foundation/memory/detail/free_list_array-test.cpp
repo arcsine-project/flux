@@ -1,6 +1,4 @@
 #include <flux/foundation.hpp>
-#include <flux/foundation/memory/detail/free_list.hpp>
-#include <flux/foundation/memory/detail/free_list_array.hpp>
 
 #include <catch2/catch.hpp>
 
