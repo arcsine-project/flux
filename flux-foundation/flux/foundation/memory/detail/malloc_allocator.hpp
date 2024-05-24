@@ -38,7 +38,7 @@ struct [[nodiscard]] malloc_allocator final {
         ::std::realloc(memory, size);
 #    endif
         if (!memory) [[unlikely]]
-            terminate();
+            fast_terminate();
 
         return memory;
     }
