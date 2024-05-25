@@ -102,7 +102,7 @@ TEST_CASE("fou::memory_pool_list", "[flux-memory/memory_pool_list.hpp]") {
 
         auto memory = small_pool.allocate_array(6, 8);
         CHECK(memory);
-        // small_pool.deallocate_array(memory, 6, 8);
+        small_pool.deallocate_array(memory, 6, 8);
     }
 
     SECTION("try_reserve_memory array") {
