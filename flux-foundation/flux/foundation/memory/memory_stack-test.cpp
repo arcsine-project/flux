@@ -108,39 +108,61 @@ TEST_CASE("fou::memory_stack", "[flux-memory/memory_stack.hpp]") {
     SECTION("unwinder") {
         auto marker = stack.top();
         {
-            memory_stack_unwinder<decltype(stack)> unwind(stack);
+            memory_stack_unwinder<decltype(stack)> unwinder(stack);
             stack.allocate(10, 1);
-            CHECK(unwind.will_unwind());
-            CHECK(&unwind.stack() == &stack);
-            CHECK(unwind.marker() == marker);
+            CHECK(unwinder.will_unwind());
+            CHECK(&unwinder.stack() == &stack);
+            CHECK(unwinder.marker() == marker);
         }
         CHECK(stack.top() == marker);
 
-        memory_stack_unwinder<decltype(stack)> unwind(stack);
+        memory_stack_unwinder<decltype(stack)> unwinder(stack);
         stack.allocate(10, 1);
-        unwind.unwind();
+        unwinder.unwind();
         CHECK(stack.top() == marker);
-        CHECK(unwind.will_unwind());
+        CHECK(unwinder.will_unwind());
 
         {
-            memory_stack_unwinder<decltype(stack)> unwind2(stack);
+            memory_stack_unwinder<decltype(stack)> unwinder2(stack);
             stack.allocate(10, 1);
-            unwind2.release();
-            CHECK(!unwind2.will_unwind());
+            unwinder2.release();
+            CHECK(!unwinder2.will_unwind());
         }
         CHECK(stack.top() > marker);
         marker = stack.top();
 
-        unwind.release(); // need to release
-        unwind = memory_stack_unwinder<decltype(stack)>(stack);
-        CHECK(unwind.will_unwind());
-        CHECK(unwind.marker() == marker);
-        CHECK(&unwind.stack() == &stack);
-        auto unwind2 = ::std::move(unwind);
-        CHECK(unwind2.will_unwind());
-        CHECK(&unwind2.stack() == &stack);
-        CHECK(unwind2.marker() == marker);
-        CHECK(!unwind.will_unwind());
+        unwinder.release(); // need to release
+        unwinder = memory_stack_unwinder<decltype(stack)>(stack);
+        CHECK(unwinder.will_unwind());
+        CHECK(unwinder.marker() == marker);
+        CHECK(&unwinder.stack() == &stack);
+        auto unwinder2 = ::std::move(unwinder);
+        CHECK(unwinder2.will_unwind());
+        CHECK(&unwinder2.stack() == &stack);
+        CHECK(unwinder2.marker() == marker);
+        CHECK(!unwinder.will_unwind());
+    }
+
+    SECTION("unwinder move") {
+        auto marker = stack.top();
+
+        memory_stack_unwinder<decltype(stack)> unwinder1(stack);
+        memory_stack_unwinder<decltype(stack)> unwinder2(stack);
+
+        stack.allocate(10, 1);
+
+        CHECK(unwinder1.will_unwind());
+        CHECK(&unwinder1.stack() == &stack);
+        CHECK(unwinder1.marker() == marker);
+
+        CHECK(unwinder2.will_unwind());
+        CHECK(&unwinder2.stack() == &stack);
+        CHECK(unwinder2.marker() == marker);
+
+        unwinder2 = ::std::move(unwinder1);
+        CHECK(stack.top() == marker);
+        CHECK_FALSE(unwinder1.will_unwind());
+        unwinder2.release();
     }
 
     SECTION("overaligned") {

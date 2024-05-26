@@ -498,12 +498,20 @@ public:
     }
     // clang-format on
 
+    /* [[TEMPORARILY UNUSED]]
+    // Creates a storage from the internal `allocator_concept` base class for the type-erasure.
+    // Has the same effect as if the actual stored allocator were passed to the other constructor overloads.
+    // NOTE: This constructor is used internally to avoid double-nesting.
     constexpr explicit(false) reference_storage(allocator_concept& allocator) noexcept
             : reference_storage{static_cast<allocator_concept const&>(allocator)} {}
 
+    // Creates a storage from the internal `allocator_concept` base class for the type-erasure.
+    // Has the same effect as if the actual stored allocator were passed to the other constructor overloads.
+    // NOTE: This constructor is used internally to avoid double-nesting.
     constexpr explicit(false) reference_storage(allocator_concept const& allocator) noexcept {
         allocator.clone(&storage_);
     }
+    [[TEMPORARILY UNUSED]] */
 
     constexpr ~reference_storage() {
         allocator().~allocator_type();
