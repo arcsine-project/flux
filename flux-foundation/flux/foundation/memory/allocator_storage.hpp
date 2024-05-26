@@ -496,7 +496,6 @@ public:
                       "requires all instantiations to have certain maximum size");
         detail::construct_at(reinterpret_cast<wrapper<RawAllocator>*>(storage_), allocator);
     }
-    // clang-format on
 
     /* [[TEMPORARILY UNUSED]]
     // Creates a storage from the internal `allocator_concept` base class for the type-erasure.
@@ -539,6 +538,7 @@ public:
         auto memory = static_cast<void*>(&storage_);
         return *static_cast<allocator_type*>(memory);
     }
+    // clang-format on
 
 private:
     using default_instantiation = wrapper<allocator_concept>;
