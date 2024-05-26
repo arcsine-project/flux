@@ -345,23 +345,23 @@ template <> class [[nodiscard]] reference_storage<any_allocator> {
         using difference_type = ::std::ptrdiff_t;
         using stateful        = meta::true_type;
 
-        virtual constexpr void clone(void* const) const noexcept = 0;
+        constexpr virtual void clone(void* const) const noexcept = 0;
 
-        virtual constexpr void*     allocate_node(size_type, size_type) noexcept = 0;
-        virtual constexpr void* try_allocate_node(size_type, size_type) noexcept = 0;
+        constexpr virtual void*     allocate_node(size_type, size_type) noexcept = 0;
+        constexpr virtual void* try_allocate_node(size_type, size_type) noexcept = 0;
 
-        virtual constexpr void*     allocate_array(size_type, size_type, size_type) noexcept = 0;
-        virtual constexpr void* try_allocate_array(size_type, size_type, size_type) noexcept = 0;
+        constexpr virtual void*     allocate_array(size_type, size_type, size_type) noexcept = 0;
+        constexpr virtual void* try_allocate_array(size_type, size_type, size_type) noexcept = 0;
 
-        virtual constexpr void     deallocate_node(void*, size_type, size_type) noexcept = 0;
-        virtual constexpr bool try_deallocate_node(void*, size_type, size_type) noexcept = 0;
+        constexpr virtual void     deallocate_node(void*, size_type, size_type) noexcept = 0;
+        constexpr virtual bool try_deallocate_node(void*, size_type, size_type) noexcept = 0;
 
-        virtual constexpr void     deallocate_array(void*, size_type, size_type, size_type) noexcept = 0;
-        virtual constexpr bool try_deallocate_array(void*, size_type, size_type, size_type) noexcept = 0;
+        constexpr virtual void     deallocate_array(void*, size_type, size_type, size_type) noexcept = 0;
+        constexpr virtual bool try_deallocate_array(void*, size_type, size_type, size_type) noexcept = 0;
 
-        virtual constexpr bool is_composable() const noexcept = 0;
+        constexpr virtual bool is_composable() const noexcept = 0;
 
-        virtual constexpr ~allocator_concept() = default;
+        constexpr virtual ~allocator_concept() = default;
 
         constexpr size_type max_node_size() const noexcept {
             return max_size(query_type::node);
