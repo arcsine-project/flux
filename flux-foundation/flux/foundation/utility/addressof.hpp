@@ -4,8 +4,8 @@ namespace flux::fou {
 
 // clang-format off
 template <typename T>
-#if __has_cpp_attribute(clang::always_inline)
-[[clang::always_inline]]
+#if __has_cpp_attribute(__gnu__::__always_inline__)
+[[__gnu__::__always_inline__]]
 #endif
 [[nodiscard]] inline constexpr T* addressof(T& arg) noexcept {
     return __builtin_addressof(arg);
