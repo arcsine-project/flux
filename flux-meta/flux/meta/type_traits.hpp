@@ -38,6 +38,8 @@ template <typename T>
 using range_ref_t = ::std::ranges::range_reference_t<T>;
 template <typename T>
 using range_rvref_t = ::std::ranges::range_rvalue_reference_t<T>;
+template <typename T>
+using range_diff_t = ::std::ranges::range_difference_t<T>;
 
 template <typename T>
 using borrowed_iter_t = ::std::ranges::borrowed_iterator_t<T>;

@@ -108,6 +108,28 @@ struct [[nodiscard]] uninitialized_value_construct_n_fn final {
     }
 };
 
+struct [[nodiscard]] uninitialized_construct_n_fn final {
+    template <meta::nothrow_forward_iterator Iterator, typename T>
+        requires meta::constructible_from<meta::iter_value_t<Iterator>, T>
+    static constexpr Iterator operator()(Iterator first, meta::iter_diff_t<Iterator> n,
+                                         T const& value) noexcept {
+        using ValueType = meta::remove_ref_t<meta::iter_ref_t<Iterator>>;
+        if constexpr (meta::use_memset_value_construct<Iterator> and meta::is_byte<T>) {
+            if not consteval {
+                auto* const first_byte = (char*)detail::to_address(first);
+                auto const  n_bytes    = sizeof(ValueType) * (std::size_t)n;
+                __builtin_memset((void*)first_byte, value, n_bytes);
+                return first + n;
+            }
+        }
+
+        for (; n > 0; ++first, (void)--n) {
+            detail::construct_at<ValueType>(detail::to_address(first), value);
+        }
+        return first;
+    }
+};
+
 // clang-format off
 template <bool IsMove>
 struct [[nodiscard]] uninitialized_memcpy_or_memmove_fn final {
@@ -567,6 +589,52 @@ struct [[nodiscard]] uninitialized_relocate_no_overlap_fn final {
     // clang-format on
 };
 
+struct [[nodiscard]] uninitialized_relocate_backward_fn final {
+    template <typename InputIterator, typename OutputIterator>
+    using relocate_backward_result = in_out_result<InputIterator, OutputIterator>;
+
+    // clang-format off
+    template <meta::bidirectional_iterator      InputIterator,
+              meta::sentinel_for<InputIterator> InputSentinel,
+              meta::bidirectional_iterator      OutputIterator>
+        requires meta::iter_move_constructible<OutputIterator, InputIterator>
+    static constexpr relocate_backward_result<InputIterator, OutputIterator>
+    operator()(InputIterator first, InputSentinel last, OutputIterator result) noexcept {
+        if constexpr (meta::memcpyable<InputIterator, OutputIterator>) {
+            if constexpr (meta::sized_sentinel_for<InputSentinel, InputIterator>) {
+                auto const count = last - first;
+                if (0 != count) {
+                    result -= count;
+                    detail::constexpr_memmove(detail::to_address(result), detail::to_address(first),
+                                              (std::size_t)count);
+                }
+                return {first + count, result};
+            } else {
+                static_assert(false, "unreachable sentinel");
+            }
+        } else {
+            auto last_iter          = ranges::next(first, last);
+            auto original_last_iter = last_iter;
+
+            while (first != last_iter) {
+                --last_iter;
+                --result;
+                relocate_at(detail::to_address(last_iter), detail::to_address(result));
+            }
+            return {::std::move(original_last_iter), ::std::move(result)};
+        }
+    }
+
+    template <meta::bidirectional_range Range, meta::bidirectional_iterator Iterator>
+        requires meta::iter_move_constructible<meta::iterator_t<Range>, Iterator>
+    static constexpr auto operator()(Range&& range, Iterator&& result) noexcept
+            -> relocate_backward_result<meta::borrowed_iter_t<Range>, Iterator> {
+        return operator()(::std::ranges::begin(range), ::std::ranges::end(range),
+                          ::std::move(result));
+    }
+    // clang-format on
+};
+
 } // namespace detail
 
 namespace ranges {
@@ -575,12 +643,14 @@ inline constexpr auto uninitialized_default_construct   = detail::uninitialized_
 inline constexpr auto uninitialized_default_construct_n = detail::uninitialized_default_construct_n_fn{};
 inline constexpr auto uninitialized_value_construct     = detail::uninitialized_value_construct_fn{};
 inline constexpr auto uninitialized_value_construct_n   = detail::uninitialized_value_construct_n_fn{};
+inline constexpr auto uninitialized_construct_n         = detail::uninitialized_construct_n_fn{};
 inline constexpr auto uninitialized_copy                = detail::uninitialized_copy_fn{};
 inline constexpr auto uninitialized_copy_n              = detail::uninitialized_copy_n_fn{};
 inline constexpr auto uninitialized_move                = detail::uninitialized_move_fn{};
 inline constexpr auto uninitialized_move_n              = detail::uninitialized_move_n_fn{};
 inline constexpr auto uninitialized_copy_no_overlap     = detail::uninitialized_copy_no_overlap_fn{};
 inline constexpr auto uninitialized_relocate            = detail::uninitialized_relocate_fn{};
+inline constexpr auto uninitialized_relocate_backward   = detail::uninitialized_relocate_backward_fn{};
 inline constexpr auto uninitialized_relocate_no_overlap = detail::uninitialized_relocate_no_overlap_fn{};
 // clang-format on
 } // namespace ranges

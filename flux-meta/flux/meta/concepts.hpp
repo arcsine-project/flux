@@ -22,8 +22,10 @@ using ::std::random_access_iterator;
 using ::std::same_as;
 using ::std::sentinel_for;
 using ::std::sized_sentinel_for;
+using ::std::ranges::bidirectional_range;
 using ::std::ranges::input_range;
 using ::std::ranges::range;
+using ::std::ranges::sized_range;
 
 template <typename T, ::std::size_t Size>
 concept same_size = requires { requires sizeof(T) == Size; };
@@ -198,12 +200,27 @@ concept has_to_address = requires(T const p) { p.to_address(); } or
 template <typename T>
 concept has_arrow_operator = requires(T const p) { p.operator->(); };
 
-template <typename InputIterator, typename OutputIterator>
+template <typename OutputIterator, typename InputIterator>
 concept iter_move_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_rvref_t<InputIterator>>;
 
-template <typename InputIterator, typename OutputIterator>
+template <typename OutputIterator, typename InputIterator>
 concept iter_copy_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_ref_t<InputIterator>>;
+
+template <typename Range, typename T>
+concept container_compatible_range = input_range<Range> and convertible_to<range_ref_t<Range>, T>;
+
+// clang-format off
+template <typename T>
+concept is_byte = same_as<T, char>
+               or same_as<T, signed char>
+               or same_as<T, unsigned char>
+               or same_as<T, ::std::byte>
+               #if defined(__cpp_char8_t)
+               or same_as<T, char8_t>
+               #endif
+               ;
+// clang-format on
 
 } // namespace flux::meta

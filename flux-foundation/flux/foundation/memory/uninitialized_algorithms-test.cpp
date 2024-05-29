@@ -871,6 +871,121 @@ TEST_CASE("fou::ranges::uninitialized_relocate", "[flux-memory/uninitialized_alg
     }
 }
 
+TEST_CASE("fou::ranges::uninitialized_relocate_backward",
+          "[flux-memory/uninitialized_algorithms.hpp]") {
+    using namespace flux::fou;
+
+    SECTION("trivially relocatable at compile-time (memmove initialization)") {
+        using trivially_copyable_array_t = ::std::array<trivially_copyable_t, 3>;
+        static_assert(meta::memcpyable<trivially_copyable_array_t::iterator,
+                                       trivially_copyable_array_t::iterator>);
+        constexpr auto result_range = [] noexcept {
+            trivially_copyable_array_t array1;
+            trivially_copyable_array_t array2 = {{{4}, {5}, {6}}};
+            [[maybe_unused]] auto      out =
+                    ranges::uninitialized_relocate_backward(array2, array1.end());
+            return array1;
+        }();
+        STATIC_REQUIRE(result_range == trivially_copyable_array_t{{{4}, {5}, {6}}});
+    }
+
+    SECTION("trivially relocatable at run-time (memmove initialization)") {
+        using trivially_copyable_array_t     = ::std::array<trivially_copyable_t, 3>;
+        using dst_trivially_copyable_array_t = ::std::array<trivially_copyable_t, 4>;
+        static_assert(meta::memcpyable<trivially_copyable_array_t::iterator,
+                                       trivially_copyable_array_t::iterator>);
+        {
+            trivially_copyable_array_t array1 = {{{3}, {2}, {1}}};
+            trivially_copyable_array_t array2;
+
+            auto [it1, it2] = ranges::uninitialized_relocate_backward(array1.begin(), array1.end(),
+                                                                      array2.end());
+            CHECK(array1.end() == it1);
+            CHECK(array2.begin() == it2);
+            CHECK(array2 == trivially_copyable_array_t{{{3}, {2}, {1}}});
+        }
+        {
+            trivially_copyable_array_t     array1 = {{{3}, {2}, {1}}};
+            dst_trivially_copyable_array_t array2 = {{{4}, {5}, {6}, {7}}};
+
+            auto [it1, it2] = ranges::uninitialized_relocate_backward(array1.begin(), array1.end(),
+                                                                      array2.end());
+            CHECK(array1.end() == it1);
+            CHECK(array2.begin() + 1 == it2);
+            CHECK(array2 == dst_trivially_copyable_array_t{{{4}, {3}, {2}, {1}}});
+        }
+        {
+            // Overlapping.
+            dst_trivially_copyable_array_t array = {{{4}, {5}, {6}, {7}}};
+
+            auto [it1, it2] = ranges::uninitialized_relocate_backward(
+                    array.begin(), array.begin() + 2, array.end());
+            CHECK(array.begin() + 2 == it1);
+            CHECK(array.begin() + 2 == it2);
+            CHECK(array == dst_trivially_copyable_array_t{{{4}, {5}, {4}, {5}}});
+        }
+    }
+
+    SECTION("non trivially relocatable at compile-time") {
+        using non_trivially_movable_array_t = ::std::array<non_trivially_movable_t, 3>;
+        static_assert(not meta::memcpyable<non_trivially_movable_array_t::iterator,
+                                           non_trivially_movable_array_t::iterator>);
+        constexpr auto result_range = [] noexcept {
+            non_trivially_movable_array_t array1;
+            non_trivially_movable_array_t array2 = {4, 5, 6};
+            [[maybe_unused]] auto         out =
+                    ranges::uninitialized_relocate_backward(array2, array1.end());
+            return array1;
+        }();
+        STATIC_REQUIRE(result_range == non_trivially_movable_array_t{4, 5, 6});
+    }
+
+    SECTION("non trivially relocatable at run-time") {
+        relocatable_counter_t::reset();
+
+        using InputIterator  = int*;
+        using OutputIterator = relocatable_counter_t*;
+
+        int const N         = 5;
+        int       values[N] = {1, 2, 3, 4, 5};
+
+        alignas(relocatable_counter_t) std::byte pool[sizeof(relocatable_counter_t) * N];
+        relocatable_counter_t*                   counted = (relocatable_counter_t*)pool;
+
+        {
+            auto [it1, it2] = ranges::uninitialized_relocate_backward(
+                    InputIterator(values), InputIterator(values + 1), OutputIterator(counted + N));
+            CHECK(it1 == InputIterator(values + 1));
+            CHECK(it2 == OutputIterator(counted + N - 1));
+            CHECK(relocatable_counter_t::constructed == 1);
+            CHECK(relocatable_counter_t::count == 1);
+            CHECK(counted[4].value == 1);
+            CHECK(values[0] == 0);
+        }
+        {
+            auto [it1, it2] = ranges::uninitialized_relocate_backward(
+                    InputIterator(values + 1), InputIterator(values + N),
+                    OutputIterator(counted + N - 1));
+            CHECK(it1 == InputIterator(values + N));
+            CHECK(it2 == OutputIterator(counted));
+            CHECK(relocatable_counter_t::count == 5);
+            CHECK(relocatable_counter_t::constructed == 5);
+            CHECK(counted[0].value == 2);
+            CHECK(counted[1].value == 3);
+            CHECK(counted[2].value == 4);
+            CHECK(counted[3].value == 5);
+            CHECK(counted[4].value == 1);
+            CHECK(values[1] == 0);
+            CHECK(values[2] == 0);
+            CHECK(values[3] == 0);
+            CHECK(values[4] == 0);
+        }
+
+        destroy_range(counted, counted + N);
+        CHECK(relocatable_counter_t::count == 0);
+    }
+}
+
 TEST_CASE("fou::ranges::uninitialized_relocate_no_overlap",
           "[flux-memory/uninitialized_algorithms.hpp]") {
     using namespace flux::fou;
