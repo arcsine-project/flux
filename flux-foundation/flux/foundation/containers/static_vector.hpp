@@ -69,7 +69,7 @@ public:
     }
 
     template <meta::container_compatible_range<T> Range>
-    constexpr static_vector(::std::from_range_t, Range&& range) noexcept : static_vector() {
+    constexpr static_vector(from_range_t, Range&& range) noexcept : static_vector() {
         FLUX_ASSERT(ranges::sized_distance(range) <= capacity());
         insert(cend(), ::std::ranges::begin(range), ::std::ranges::end(range));
     }

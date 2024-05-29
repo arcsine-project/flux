@@ -2,9 +2,8 @@
 
 namespace flux::fou {
 
-template <meta::random_access_iterator Iterator, typename Adapter>
-class iterator_adapter final {
-    using adapter_type  = Adapter;
+template <meta::random_access_iterator Iterator, typename Adapter> class iterator_adapter final {
+    using adapter_type = Adapter;
 
 public:
     using reference         = meta::deduce_t<Adapter(meta::deref_t<Iterator>)>;
