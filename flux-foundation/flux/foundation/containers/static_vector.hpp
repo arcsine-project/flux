@@ -163,7 +163,7 @@ public:
     [[nodiscard]] constexpr bool empty() const noexcept {
         return size() == 0;
     }
-    constexpr void reserve(size_type new_capacity) noexcept {
+    constexpr void reserve([[maybe_unused]] size_type new_capacity) noexcept {
         FLUX_ASSERT(new_capacity <= capacity());
     }
 
@@ -176,7 +176,7 @@ public:
     constexpr void clear() noexcept
         requires meta::not_trivially_destructible<T>
     {
-        destroy(begin(), end());
+        destroy_range(begin(), end());
         size_ = 0;
     }
 
@@ -216,7 +216,7 @@ public:
 
             // Reached capacity.
             if (first != last) {
-                size_type excess_element_count = 0;
+                [[maybe_unused]] size_type excess_element_count = 0;
                 for (; first != last; ++first) {
                     ++excess_element_count;
                 }
