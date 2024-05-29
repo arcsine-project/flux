@@ -254,7 +254,7 @@ public:
         auto const erase_end   = begin() + (last - begin());
 
         auto const elements_to_erase = size_type(erase_end - erase_begin);
-        destroy(erase_begin, erase_end);
+        destroy_range(erase_begin, erase_end);
 
         ranges::uninitialized_relocate(erase_end, end(), erase_begin);
         size_ -= elements_to_erase;
