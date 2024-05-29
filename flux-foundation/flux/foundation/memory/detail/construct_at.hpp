@@ -42,7 +42,7 @@ constexpr void destroy_at(T* const location) noexcept {
     FLUX_ASSERT(location != nullptr, "null pointer given to destroy_at");
     if constexpr (meta::is_array_v<T>) {
         destroy_range(::std::begin(*location), ::std::end(*location));
-    } else {
+    } else if constexpr(not meta::trivially_destructible<T>) {
         location->~T();
     }
 }

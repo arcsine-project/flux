@@ -216,7 +216,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("copy constructor") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto v1 = [] {
                 fou::static_vector<nontrivial_int, 3> v;
                 v.emplace_back(1);
                 v.emplace_back(2);
@@ -237,7 +237,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("move constructor") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto v1 = [] {
                 fou::static_vector<nontrivial_int, 3> v;
                 v.emplace_back(1);
                 v.emplace_back(2);
@@ -263,7 +263,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("copy assignment") {
         {
-            constexpr auto cmp = []() {
+            constexpr auto cmp = [] {
                 fou::static_vector<nontrivial_int, 3> v1;
                 v1.emplace_back(1);
                 v1.emplace_back(2);
@@ -286,7 +286,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("move assignment") {
         {
-            constexpr auto cmp = []() {
+            constexpr auto cmp = [] {
                 fou::static_vector<nontrivial_int, 3> v1;
                 v1.emplace_back(1);
                 v1.emplace_back(2);
@@ -375,7 +375,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("assign") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto v1 = [] {
                 fou::static_vector<int, 5> v;
                 v.assign({1, 2, 3, 4, 5});
                 return v;
@@ -401,7 +401,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("clear") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto v1 = [] {
                 fou::static_vector<int, 5> v{1, 2, 3, 4, 5};
                 v.clear();
                 return v;
@@ -428,7 +428,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("resize") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto v1 = [] {
                 fou::static_vector<int, 5> v{1, 2, 3, 4, 5};
                 v.resize(3);
                 return v;
@@ -437,7 +437,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
             STATIC_REQUIRE(v1.capacity() == 5);
         }
         {
-            constexpr auto v1 = []() {
+            constexpr auto v1 = [] {
                 fou::static_vector<nontrivial_int, 5> v{1, 2};
                 v.resize(4, 7);
                 return v;
@@ -494,14 +494,14 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("push_back") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 5> v{1, 2};
                 v.push_back(5);
                 int const value = 8;
                 v.push_back(value);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector<int, 5>{1, 2, 5, 8});
+            STATIC_REQUIRE(result == fou::static_vector<int, 5>{1, 2, 5, 8});
         }
         {
             fou::static_vector<int, 3> v;
@@ -518,14 +518,14 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("emplace_back") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 5> v{1, 2};
                 v.emplace_back(5);
                 int const value = 8;
                 v.emplace_back(value);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector<int, 5>{1, 2, 5, 8});
+            STATIC_REQUIRE(result == fou::static_vector<int, 5>{1, 2, 5, 8});
         }
         {
             fou::static_vector<complex_type, 3> v;
@@ -538,13 +538,13 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("reserve") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 6> v{};
                 v.reserve(5);
                 return v;
             }();
-            STATIC_REQUIRE(v1.max_size() == 6);
-            STATIC_REQUIRE(v1.capacity() == 6);
+            STATIC_REQUIRE(result.max_size() == 6);
+            STATIC_REQUIRE(result.capacity() == 6);
         }
         {
             fou::static_vector<int, 10> v;
@@ -556,14 +556,14 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("pop_back") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 3> v{0, 1, 2};
                 v.pop_back();
                 return v;
             }();
-            STATIC_REQUIRE(v1.size() == 2);
-            STATIC_REQUIRE(v1.capacity() == 3);
-            STATIC_REQUIRE(v1 == fou::static_vector<int, 3>{0, 1});
+            STATIC_REQUIRE(result.size() == 2);
+            STATIC_REQUIRE(result.capacity() == 3);
+            STATIC_REQUIRE(result == fou::static_vector<int, 3>{0, 1});
         }
         {
             fou::static_vector<nontrivial_counter, 4> v{5, 6, 7};
@@ -597,35 +597,35 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
             CHECK(v == fou::static_vector<nontrivial_counter, 5>{3, 5, 1, 6, 7});
         }
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 5> v{1, 2, 3};
                 (void)v.insert(v.begin(), 5);
                 int const value = 8;
                 (void)v.insert(v.begin() + 2, value);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector{5, 1, 8, 2, 3});
+            STATIC_REQUIRE(result == fou::static_vector{5, 1, 8, 2, 3});
         }
     }
 
     SECTION("insert range") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 6> v{1, 2, 3, 4};
                 ::std::array<int, 3>       a{5, 6, 7};
                 (void)v.insert(v.begin() + 2, a.begin(), a.begin() + 2);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector{1, 2, 5, 6, 3, 4});
+            STATIC_REQUIRE(result == fou::static_vector{1, 2, 5, 6, 3, 4});
         }
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<nontrivial_int, 3> v;
                 ::std::array<nontrivial_int, 3>       a{0, 1, 2};
                 (void)v.insert(v.begin(), a.begin(), a.end());
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector<nontrivial_int, 3>{0, 1, 2});
+            STATIC_REQUIRE(result == fou::static_vector<nontrivial_int, 3>{0, 1, 2});
         }
         {
             fou::static_vector<int, 5> v{0, 1, 2};
@@ -640,23 +640,23 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("emplace") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 5> v{0, 1, 2};
                 (void)v.emplace(v.begin() + 1, 3);
                 (void)v.emplace(v.begin() + 1, 4);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector{0, 4, 3, 1, 2});
+            STATIC_REQUIRE(result == fou::static_vector{0, 4, 3, 1, 2});
         }
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<nontrivial_int, 3> v;
                 (void)v.emplace(v.begin(), 3);
                 (void)v.emplace(v.begin(), 4);
                 (void)v.emplace(v.begin(), 2);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector<nontrivial_int, 3>{2, 4, 3});
+            STATIC_REQUIRE(result == fou::static_vector<nontrivial_int, 3>{2, 4, 3});
         }
         {
             fou::static_vector<nontrivial_counter, 5> v{0, 1, 2};
@@ -671,12 +671,12 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("erase one") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 3> v{2, 3, 4};
                 (void)v.erase(v.begin());
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector<int, 3>{3, 4});
+            STATIC_REQUIRE(result == fou::static_vector<int, 3>{3, 4});
         }
         {
             fou::static_vector<nontrivial_counter, 3> v{2, 3, 4};
@@ -688,22 +688,22 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("erase range") {
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 5> v{0, 1, 2, 3, 4};
                 (void)v.erase(v.begin() + 1, v.begin() + 3);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector<int, 5>{0, 3, 4});
+            STATIC_REQUIRE(result == fou::static_vector<int, 5>{0, 3, 4});
         }
         {
-            constexpr auto v1 = []() {
+            constexpr auto result = [] {
                 fou::static_vector<nontrivial_int, 6> v{0, 1, 2};
                 ::std::array<nontrivial_int, 3>       a{5, 6, 7};
                 (void)v.insert(v.end(), a.begin(), a.end());
                 (void)v.erase(v.begin() + 2, v.begin() + 4);
                 return v;
             }();
-            STATIC_REQUIRE(v1 == fou::static_vector<nontrivial_int, 6>{0, 1, 6, 7});
+            STATIC_REQUIRE(result == fou::static_vector<nontrivial_int, 6>{0, 1, 6, 7});
         }
         {
             fou::static_vector<int, 8> v1{2, 1, 4, 5, 0, 3};
@@ -778,7 +778,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
 
     SECTION("swap") {
         {
-            constexpr auto result = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 5> v1{0, 1, 2};
                 fou::static_vector<int, 5> v2{5, 6, 7};
                 swap(v1, v2);
@@ -788,7 +788,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
             STATIC_REQUIRE(result);
         }
         {
-            constexpr auto result = []() {
+            constexpr auto result = [] {
                 fou::static_vector<int, 5> v1{0, 1, 2, 3};
                 fou::static_vector<int, 5> v2{5, 6, 7};
                 swap(v1, v2);
@@ -798,7 +798,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
             STATIC_REQUIRE(result);
         }
         {
-            constexpr auto result = []() {
+            constexpr auto result = [] {
                 fou::static_vector<nontrivial_int, 5> v1{0, 1, 2};
                 fou::static_vector<nontrivial_int, 5> v2{5, 6, 7};
                 swap(v1, v2);

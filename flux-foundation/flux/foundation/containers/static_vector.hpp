@@ -250,15 +250,33 @@ public:
 
     constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
         FLUX_ASSERT(first <= last, "invalid range first > last");
-        auto const erase_begin = begin() + (first - begin());
-        auto const erase_end   = begin() + (last - begin());
+        FLUX_ASSERT(first >= cbegin() && last <= cend(), "iterators exceed container range");
+        auto const elements_to_move   = ranges::distance(last, cend());
+        auto const elements_to_remove = ranges::distance(first, last);
 
-        auto const elements_to_erase = size_type(erase_end - erase_begin);
-        destroy_range(erase_begin, erase_end);
+        auto move_first  = const_to_mutable_it(last);
+        auto move_last   = ranges::next(move_first, elements_to_move);
+        auto erase_first = const_to_mutable_it(first);
 
-        ranges::uninitialized_relocate(erase_end, end(), erase_begin);
-        size_ -= elements_to_erase;
-        return erase_begin;
+        if consteval {
+            // Do the move.
+            auto erase_last = ::std::move(move_first, move_last, erase_first);
+
+            // Clean out the tail.
+            destroy_range(erase_last, move_last);
+        } else {
+            // We can only use this when `!is_constant_evaluated`, since otherwise Clang
+            // complains about objects being accessed outside their lifetimes.
+
+            // Clean out the gap.
+            destroy_range(erase_first, ranges::next(erase_first, elements_to_remove));
+
+            // Do the relocation.
+            ranges::uninitialized_relocate(move_first, move_last, erase_first);
+        }
+
+        size_ -= static_cast<size_type>(elements_to_remove);
+        return erase_first;
     }
 
     constexpr iterator erase(const_iterator position) noexcept {
