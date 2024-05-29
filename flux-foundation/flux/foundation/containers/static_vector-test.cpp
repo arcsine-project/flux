@@ -342,6 +342,8 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
         {
             constexpr fou::static_vector v1{1, 5};
             constexpr fou::static_vector v2{1, 2, 4};
+            STATIC_REQUIRE_FALSE(v1 == v2);
+            STATIC_REQUIRE(v1 != v2);
             STATIC_REQUIRE_FALSE(v1 < v2);
             STATIC_REQUIRE_FALSE(v1 <= v2);
             STATIC_REQUIRE(v1 > v2);
@@ -350,6 +352,8 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
         {
             fou::static_vector v1{1, 5};
             fou::static_vector v2{1, 2, 4};
+            CHECK_FALSE(v1 == v2);
+            CHECK(v1 != v2);
             CHECK_FALSE(v1 < v2);
             CHECK_FALSE(v1 <= v2);
             CHECK(v1 > v2);
@@ -813,6 +817,18 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
             swap(v1, v2);
             CHECK(v1 == fou::static_vector<nontrivial_int, 4>{5, 6, 7, 8});
             CHECK(v2 == fou::static_vector<nontrivial_int, 3>{0, 1, 2});
+        }
+        {
+            fou::static_vector<nontrivial_int, 5> v1{0, 1, 2, 3};
+            fou::static_vector<nontrivial_int, 5> v2{5, 6, 7};
+            swap(v1, v2);
+            CHECK(v1 == fou::static_vector<nontrivial_int, 3>{5, 6, 7});
+            CHECK(v2 == fou::static_vector<nontrivial_int, 4>{0, 1, 2, 3});
+        }
+        {
+            fou::static_vector<nontrivial_int, 5> v{0, 1, 2};
+            swap(v, v);
+            CHECK(v == fou::static_vector<nontrivial_int, 3>{0, 1, 2});
         }
     }
 

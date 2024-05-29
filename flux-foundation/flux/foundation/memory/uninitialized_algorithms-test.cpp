@@ -898,8 +898,7 @@ TEST_CASE("fou::ranges::uninitialized_relocate_backward",
             trivially_copyable_array_t array1 = {{{3}, {2}, {1}}};
             trivially_copyable_array_t array2;
 
-            auto [it1, it2] = ranges::uninitialized_relocate_backward(array1.begin(), array1.end(),
-                                                                      array2.end());
+            auto [it1, it2] = ranges::uninitialized_relocate_backward(array1, array2.end());
             CHECK(array1.end() == it1);
             CHECK(array2.begin() == it2);
             CHECK(array2 == trivially_copyable_array_t{{{3}, {2}, {1}}});

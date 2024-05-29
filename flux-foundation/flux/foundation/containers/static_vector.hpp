@@ -57,7 +57,6 @@ public:
 
     constexpr static_vector(size_type count, T const& value) noexcept : static_vector() {
         FLUX_ASSERT(count <= capacity());
-        static_assert(meta::same_as<T*, decltype(detail::to_address(begin()))>);
         ranges::uninitialized_construct_n(begin(), difference_type(count), value);
         size_ = count;
     }
