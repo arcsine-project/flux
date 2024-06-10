@@ -69,7 +69,7 @@ struct [[nodiscard]] uninitialized_value_construct_fn final {
             if not consteval {
                 char* const first_byte = (char*)detail::to_address(first);
                 auto const  n_bytes    = (char*)detail::to_address(last) - first_byte;
-                __builtin_memset((void*)first_byte, 0, (std::size_t)n_bytes);
+                __builtin_memset((void*)first_byte, 0, (::std::size_t)n_bytes);
                 return last;
             }
         }
@@ -95,7 +95,7 @@ struct [[nodiscard]] uninitialized_value_construct_n_fn final {
         if constexpr (meta::use_memset_value_construct<Iterator>) {
             if not consteval {
                 auto* const first_byte = (char*)detail::to_address(first);
-                auto const  n_bytes    = sizeof(ValueType) * (std::size_t)n;
+                auto const  n_bytes    = sizeof(ValueType) * (::std::size_t)n;
                 __builtin_memset((void*)first_byte, 0, n_bytes);
                 return first + n;
             }
@@ -108,7 +108,7 @@ struct [[nodiscard]] uninitialized_value_construct_n_fn final {
     }
 };
 
-struct [[nodiscard]] uninitialized_construct_n_fn final {
+struct [[nodiscard]] uninitialized_fill_n_fn final {
     template <meta::nothrow_forward_iterator Iterator, typename T>
         requires meta::constructible_from<meta::iter_value_t<Iterator>, T>
     static constexpr Iterator operator()(Iterator first, meta::iter_diff_t<Iterator> n,
@@ -117,7 +117,7 @@ struct [[nodiscard]] uninitialized_construct_n_fn final {
         if constexpr (meta::use_memset_value_construct<Iterator> and meta::is_byte<T>) {
             if not consteval {
                 auto* const first_byte = (char*)detail::to_address(first);
-                auto const  n_bytes    = sizeof(ValueType) * (std::size_t)n;
+                auto const  n_bytes    = (::std::size_t)n;
                 __builtin_memset((void*)first_byte, value, n_bytes);
                 return first + n;
             }
@@ -151,12 +151,12 @@ struct [[nodiscard]] uninitialized_memcpy_or_memmove_fn final {
         if constexpr (IsMove) {
             auto const count = last - first;
             detail::constexpr_memmove(detail::to_address(result), detail::to_address(first),
-                                      (std::size_t)count);
+                                      (::std::size_t)count);
             return result + count;
         } else {
             auto const count = last - first;
             detail::constexpr_memcpy(detail::to_address(result), detail::to_address(first),
-                                     (std::size_t)count);
+                                     (::std::size_t)count);
             return result + count;
         }
     }
@@ -180,17 +180,17 @@ struct [[nodiscard]] uninitialized_memcpy_or_memmove_fn final {
             if constexpr (sized_input && sized_output) {
                 auto const count = ::std::min(ilast - ifirst, olast - ofirst);
                 detail::constexpr_memmove(detail::to_address(ofirst), detail::to_address(ifirst),
-                                          (std::size_t)count);
+                                          (::std::size_t)count);
                 return {ifirst + count, ofirst + count};
             } else if constexpr (sized_input) {
                 auto const count = ilast - ifirst;
                 detail::constexpr_memmove(detail::to_address(ofirst), detail::to_address(ifirst),
-                                          (std::size_t)count);
+                                          (::std::size_t)count);
                 return {ifirst + count, ofirst + count};
             } else if constexpr (sized_output) {
                 auto const count = olast - ofirst;
                 detail::constexpr_memmove(detail::to_address(ofirst), detail::to_address(ifirst),
-                                          (std::size_t)count);
+                                          (::std::size_t)count);
                 return {ifirst + count, ofirst + count};
             } else {
                 static_assert(false, "two ranges with unreachable sentinels");
@@ -199,17 +199,17 @@ struct [[nodiscard]] uninitialized_memcpy_or_memmove_fn final {
             if constexpr (sized_input && sized_output) {
                 auto const count = ::std::min(ilast - ifirst, olast - ofirst);
                 detail::constexpr_memcpy(detail::to_address(ofirst), detail::to_address(ifirst),
-                                         (std::size_t)count);
+                                         (::std::size_t)count);
                 return {ifirst + count, ofirst + count};
             } else if constexpr (sized_input) {
                 auto const count = ilast - ifirst;
                 detail::constexpr_memcpy(detail::to_address(ofirst), detail::to_address(ifirst),
-                                         (std::size_t)count);
+                                         (::std::size_t)count);
                 return {ifirst + count, ofirst + count};
             } else if constexpr (sized_output) {
                 auto const count = olast - ofirst;
                 detail::constexpr_memcpy(detail::to_address(ofirst), detail::to_address(ifirst),
-                                         (std::size_t)count);
+                                         (::std::size_t)count);
                 return {ifirst + count, ofirst + count};
             } else {
                 static_assert(false, "two ranges with unreachable sentinels");
@@ -284,7 +284,7 @@ struct [[nodiscard]] uninitialized_copy_or_move_n_fn final {
             static_assert(IsMove ? meta::move_assignable<OutType>
                                  : meta::copy_assignable<OutType>);
             detail::constexpr_memmove(detail::to_address(result), detail::to_address(first),
-                                      (std::size_t)count);
+                                      (::std::size_t)count);
             return result + count;
         } else {
             auto current = result;
@@ -606,7 +606,7 @@ struct [[nodiscard]] uninitialized_relocate_backward_fn final {
                 if (0 != count) {
                     result -= count;
                     detail::constexpr_memmove(detail::to_address(result), detail::to_address(first),
-                                              (std::size_t)count);
+                                              (::std::size_t)count);
                 }
                 return {first + count, result};
             } else {
@@ -643,7 +643,7 @@ inline constexpr auto uninitialized_default_construct   = detail::uninitialized_
 inline constexpr auto uninitialized_default_construct_n = detail::uninitialized_default_construct_n_fn{};
 inline constexpr auto uninitialized_value_construct     = detail::uninitialized_value_construct_fn{};
 inline constexpr auto uninitialized_value_construct_n   = detail::uninitialized_value_construct_n_fn{};
-inline constexpr auto uninitialized_construct_n         = detail::uninitialized_construct_n_fn{};
+inline constexpr auto uninitialized_fill_n              = detail::uninitialized_fill_n_fn{};
 inline constexpr auto uninitialized_copy                = detail::uninitialized_copy_fn{};
 inline constexpr auto uninitialized_copy_n              = detail::uninitialized_copy_n_fn{};
 inline constexpr auto uninitialized_move                = detail::uninitialized_move_fn{};

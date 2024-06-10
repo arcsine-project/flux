@@ -2,40 +2,45 @@
 
 namespace flux::fou {
 
-template <meta::random_access_iterator Iterator, typename Adapter> class iterator_adapter final {
-    using adapter_type = Adapter;
+// clang-format n
+// `It` - Any iterator (at least `InputIterator`);
+// `Fn` - Unary functor (`F: It -> T&`).
+template <meta::input_iterator It, meta::unary_functor<It> Fn>
+class iterator_adapter final {
+    using functor_type  = Fn;
+    using iter_ref_type = meta::deref_t<It>;
 
 public:
-    using reference         = meta::deduce_t<Adapter(meta::deref_t<Iterator>)>;
+    using reference         = meta::deduce_t<functor_type(iter_ref_type)>;
     using value_type        = meta::remove_ref_t<reference>;
     using pointer           = meta::add_pointer_t<value_type>;
-    using difference_type   = meta::iter_diff_t<Iterator>;
-    using iterator_type     = Iterator;
+    using difference_type   = meta::iter_diff_t<It>;
+    using iterator_type     = It;
     using iterator_category = meta::random_access_iterator_tag;
     using iterator_concept  = meta::contiguous_iterator_tag;
 
-    iterator_type it_;
-    adapter_type  adapter_;
+    FLUX_NO_UNIQUE_ADDRESS iterator_type it_;
+    FLUX_NO_UNIQUE_ADDRESS functor_type  functor_;
 
-    constexpr iterator_adapter() noexcept = default;
+    constexpr iterator_adapter() noexcept : it_{}, functor_{} {}
 
-    constexpr iterator_adapter(iterator_type const& it, adapter_type adapter = {}) noexcept
-            : it_{it}, adapter_{adapter} {}
+    constexpr iterator_adapter(iterator_type const& it, functor_type adapter = {}) noexcept
+            : it_{it}, functor_{adapter} {}
 
-    template <meta::convertible_to<iterator_type> It, typename Fn>
-    constexpr iterator_adapter(iterator_adapter<It, Fn> const& other) noexcept
-            : it_{other.it_}, adapter_{other.adapter_} {}
+    template <meta::convertible_to<iterator_type> I, typename F>
+    constexpr iterator_adapter(iterator_adapter<I, F> const& other) noexcept
+            : it_{other.it_}, functor_{other.functor_} {}
 
     [[nodiscard]] constexpr reference operator*() const noexcept {
-        return adapter_(*it_);
+        return *operator->();
     }
 
     [[nodiscard]] constexpr pointer operator->() const noexcept {
-        return addressof(adapter_(*detail::to_address(it_)));
+        return addressof(functor_(*it_));
     }
 
     [[nodiscard]] constexpr reference operator[](difference_type index) const noexcept {
-        return adapter_(it_[index]);
+        return functor_(it_[index]);
     }
 
     constexpr iterator_adapter& operator++() noexcept {
@@ -44,7 +49,7 @@ public:
     }
 
     constexpr iterator_adapter operator++(int) noexcept {
-        return {it_++, adapter_};
+        return {it_++, functor_};
     }
 
     constexpr iterator_adapter& operator--() noexcept {
@@ -53,25 +58,25 @@ public:
     }
 
     constexpr iterator_adapter operator--(int) noexcept {
-        return {it_--, adapter_};
+        return {it_--, functor_};
     }
 
-    constexpr iterator_adapter& operator+=(difference_type off) noexcept {
-        it_ += off;
+    constexpr iterator_adapter& operator+=(difference_type n) noexcept {
+        it_ += n;
         return *this;
     }
 
-    constexpr iterator_adapter& operator-=(difference_type off) noexcept {
-        it_ -= off;
+    constexpr iterator_adapter& operator-=(difference_type n) noexcept {
+        it_ -= n;
         return *this;
     }
 
-    constexpr iterator_adapter operator+(difference_type off) const noexcept {
-        return {it_ + off, adapter_};
+    constexpr iterator_adapter operator+(difference_type n) const noexcept {
+        return {it_ + n, functor_};
     }
 
-    constexpr iterator_adapter operator-(difference_type off) const noexcept {
-        return {it_ - off, adapter_};
+    constexpr iterator_adapter operator-(difference_type n) const noexcept {
+        return {it_ - n, functor_};
     }
 
     [[nodiscard]] constexpr difference_type
@@ -88,9 +93,10 @@ public:
         return it_ == other.it_;
     }
 
-    friend constexpr auto operator+(difference_type off, iterator_adapter const& it) noexcept {
-        return iterator_adapter{it.it_ + off, it.adapter_};
+    friend constexpr auto operator+(difference_type n, iterator_adapter const& a) noexcept {
+        return iterator_adapter{a.it_ + n, a.functor_};
     }
 };
+// clang-format on
 
 } // namespace flux::fou

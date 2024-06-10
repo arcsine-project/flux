@@ -8,20 +8,24 @@ using ::std::common_reference_with;
 using ::std::constructible_from;
 using ::std::contiguous_iterator;
 using ::std::convertible_to;
+using ::std::copyable;
 using ::std::default_initializable;
 using ::std::derived_from;
+using ::std::equality_comparable_with;
 using ::std::forward_iterator;
 using ::std::indirectly_copyable;
 using ::std::indirectly_movable;
 using ::std::input_iterator;
 using ::std::input_or_output_iterator;
 using ::std::integral;
+using ::std::invocable;
 using ::std::movable;
 using ::std::predicate;
 using ::std::random_access_iterator;
 using ::std::same_as;
 using ::std::sentinel_for;
 using ::std::sized_sentinel_for;
+using ::std::totally_ordered_with;
 using ::std::ranges::bidirectional_range;
 using ::std::ranges::input_range;
 using ::std::ranges::range;
@@ -58,6 +62,8 @@ concept standard_layout = ::std::is_standard_layout_v<T>;
 
 template <typename T>
 concept default_constructible = ::std::is_default_constructible_v<T>;
+template <typename T>
+concept nothrow_default_constructible = ::std::is_nothrow_default_constructible_v<T>;
 
 template <typename T>
 concept trivially_constructible = ::std::is_trivially_constructible_v<T>;
@@ -156,6 +162,8 @@ concept integer = ::std::integral<T> and not same_as<remove_cvref_t<T>, bool>;
 template <typename T>
 concept unsigned_integer = ::std::unsigned_integral<T> and not same_as<remove_cvref_t<T>, bool>;
 
+template <typename T>
+concept not_void = not ::std::is_void_v<T>;
 template <typename... Ts>
 concept not_volatile = (not ::std::is_volatile_v<Ts> and ...);
 
@@ -222,5 +230,8 @@ concept is_byte = same_as<T, char>
                #endif
                ;
 // clang-format on
+
+template <typename Fn, typename It>
+concept unary_functor = invocable<Fn, iter_ref_t<It>>;
 
 } // namespace flux::meta

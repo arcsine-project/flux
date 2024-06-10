@@ -51,79 +51,103 @@ concept deprecated_allocator =
 // Specialize it for custom `allocator` types to override this check. For example:
 // ```c++
 // template <typename T>
-// inline constexpr bool is_raw_allocator<::std::allocator<T>> = true;
+// inline constexpr bool is_raw_allocator_v<::std::allocator<T>> = true;
 // ```
 template <typename Allocator>
-inline constexpr bool is_raw_allocator = not detail::deprecated_allocator<Allocator>;
+inline constexpr bool is_raw_allocator_v = not detail::deprecated_allocator<Allocator>;
 
 // A `RawAllocator` concept is used to provide single responsibility for the `allocator`.
 // Unlike the `::std::allocator<T>` it does not work on a certain type directly, thus it is
 // unable to specify things like pointer types or construction function. It's only
 // responsible for allocating and deallocating raw memory.
 template <typename Allocator>
-concept raw_allocator = is_raw_allocator<Allocator>;
+concept raw_allocator = is_raw_allocator_v<Allocator>;
 
 namespace detail {
 
 // clang-format off
 template <typename Allocator>
 concept has_allocate =
-    requires(Allocator&& allocator, ::std::size_t size) {
+    requires(Allocator allocator, ::std::size_t size) {
         { allocator.allocate(size) };
     };
 
 template <typename Allocator>
 concept has_void_deallocate =
-    requires(Allocator&& allocator, void* ptr, ::std::size_t size) {
+    requires(Allocator allocator, void* ptr, ::std::size_t size) {
         { allocator.deallocate(ptr, size) };
     };
 
 template <typename Allocator, typename T = meta::template_parameter_t<Allocator>>
 concept has_typed_deallocate =
-    requires(Allocator&& allocator, T* ptr, ::std::size_t size) {
+    requires(Allocator allocator, T* ptr, ::std::size_t size) {
         { allocator.deallocate(ptr, size) };
     };
 
 template <typename Allocator>
 concept has_allocate_node =
-    requires(Allocator&& allocator, ::std::size_t size, ::std::size_t align) {
+    requires(Allocator allocator, ::std::size_t size, ::std::size_t align) {
         { allocator.allocate_node(size, align) };
     };
 
 template <typename Allocator>
 concept has_deallocate_node =
-    requires(Allocator&& allocator, void* ptr, ::std::size_t size, ::std::size_t align) {
+    requires(Allocator allocator, void* ptr, ::std::size_t size, ::std::size_t align) {
         { allocator.deallocate_node(ptr, size, align) };
     };
 
 template <typename Allocator>
 concept has_allocate_array =
-    requires(Allocator&& allocator, ::std::size_t count, ::std::size_t size, ::std::size_t align) {
+    requires(Allocator allocator, ::std::size_t count, ::std::size_t size, ::std::size_t align) {
         { allocator.allocate_array(count, size, align) };
     };
 
 template <typename Allocator>
 concept has_deallocate_array =
-    requires(Allocator&& allocator, void* ptr, ::std::size_t count, ::std::size_t size, ::std::size_t align) {
+    requires(Allocator allocator, void* ptr, ::std::size_t count, ::std::size_t size, ::std::size_t align) {
         { allocator.deallocate_array(ptr, count, size, align) };
     };
 
 template <typename Allocator>
 concept has_max_node_size =
-    requires(Allocator&& allocator) {
+    requires(Allocator allocator) {
         { allocator.max_node_size() } noexcept -> meta::integer;
     };
 
 template <typename Allocator>
 concept has_max_array_size =
-    requires(Allocator&& allocator) {
+    requires(Allocator allocator) {
         { allocator.max_array_size() } noexcept -> meta::integer;
     };
 
 template <typename Allocator>
 concept has_max_alignment =
-    requires(Allocator&& allocator) {
+    requires(Allocator allocator) {
         { allocator.max_alignment() } noexcept -> meta::integer;
+    };
+
+template <typename Allocator>
+concept has_propagate_on_container_swap =
+    requires {
+       typename Allocator::propagate_on_container_swap;
+    };
+
+template <typename Allocator>
+concept has_propagate_on_container_move_assignment =
+    requires {
+       typename Allocator::propagate_on_container_move_assignment;
+    };
+
+template <typename Allocator>
+concept has_propagate_on_container_copy_assignment =
+    requires {
+       typename Allocator::propagate_on_container_copy_assignment;
+    };
+    
+template <typename Allocator>
+concept has_select_on_container_copy_construction =
+    requires(Allocator&& allocator) {
+        { allocator.select_on_container_copy_construction() };
     };
 
 template <typename Allocator>
@@ -156,6 +180,25 @@ struct [[nodiscard]] is_stateful_allocator : detail::has_stateful_type<Allocator
 // multiple objects refer to the same internal allocator and if it can be copied.
 template <raw_allocator RawAllocator>
 struct [[nodiscard]] is_shared_allocator : meta::false_type {};
+
+template <raw_allocator RawAllocator>
+struct [[nodiscard]] propagation_traits final {
+    using propagate_on_container_swap            =
+            meta::condition<detail::has_propagate_on_container_swap<RawAllocator>,
+                            meta::true_type, meta::false_type>;
+    using propagate_on_container_move_assignment =
+            meta::condition<detail::has_propagate_on_container_move_assignment<RawAllocator>,
+                            meta::true_type, meta::false_type>;
+    using propagate_on_container_copy_assignment =
+            meta::condition<detail::has_propagate_on_container_copy_assignment<RawAllocator>,
+                            meta::true_type, meta::false_type>;
+
+    template <typename Allocator>
+    static constexpr Allocator
+    select_on_container_copy_construction(Allocator const& allocator) noexcept {
+        return allocator;
+    }
+};
 
 template <typename Allocator>
 struct [[nodiscard]] allocator_traits final {
@@ -327,7 +370,7 @@ concept composable_allocator =
     detail::has_try_allocate_node  <Allocator> and
     detail::has_try_deallocate_node<Allocator>;
 template <typename Allocator>
-inline constexpr bool is_composable_allocator = composable_allocator<Allocator>;
+inline constexpr bool is_composable_allocator_v = composable_allocator<Allocator>;
 // clang-format on
 
 } // namespace flux::fou

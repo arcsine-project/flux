@@ -11,10 +11,10 @@ class [[nodiscard, clang::trivial_abi]] static_vector final {
     static_assert(meta::non_cv<T>, "T must not be cv-qualified");
 
     struct [[nodiscard]] mapper final {
-        constexpr T& operator()(uninitialized_storage& storage) const noexcept {
+        static constexpr T& operator()(uninitialized_storage& storage) noexcept {
             return get<T&>(storage);
         }
-        constexpr T const& operator()(uninitialized_storage const& storage) const noexcept {
+        static constexpr T const& operator()(uninitialized_storage const& storage) noexcept {
             return get<T const&>(storage);
         }
     };
@@ -52,24 +52,25 @@ public:
         }
     }
 
-    constexpr explicit static_vector(size_type count) noexcept
-            : static_vector(count, value_type{}) {}
+    constexpr explicit static_vector(size_type count) noexcept : static_vector() {
+        FLUX_ASSERT(count <= capacity(), "static_vector(count) count exceeds capacity");
+        ranges::uninitialized_default_construct_n(begin(), difference_type(count));
+        size_ = count;
+    }
 
     constexpr static_vector(size_type count, T const& value) noexcept : static_vector() {
-        FLUX_ASSERT(count <= capacity());
-        ranges::uninitialized_construct_n(begin(), difference_type(count), value);
+        FLUX_ASSERT(count <= capacity(), "static_vector(count, value) count exceeds capacity");
+        ranges::uninitialized_fill_n(begin(), difference_type(count), value);
         size_ = count;
     }
 
     template <meta::input_iterator InputIterator>
     constexpr static_vector(InputIterator first, InputIterator last) noexcept : static_vector() {
-        FLUX_ASSERT(ranges::sized_distance(first, last) <= capacity());
         insert(cend(), first, last);
     }
 
     template <meta::container_compatible_range<T> Range>
     constexpr static_vector(from_range_t, Range&& range) noexcept : static_vector() {
-        FLUX_ASSERT(ranges::sized_distance(range) <= capacity());
         insert(cend(), ::std::ranges::begin(range), ::std::ranges::end(range));
     }
 
@@ -94,6 +95,9 @@ public:
         } else {
             ranges::uninitialized_move(other.begin(), other.end(), begin());
             size_ = other.size_;
+            // Clear `other` after the move. This is consistent with both std::vector
+            // as well as the trivial move constructor of this class.
+            other.clear();
         }
     }
 
@@ -118,6 +122,10 @@ public:
         } else {
             ranges::uninitialized_move(other.begin(), other.end(), begin());
             size_ = other.size_;
+            // Clear `other` after the move-assignment. This is done for consistency with
+            // std::vector as well as the relocation case. But the trivial assignment operator does
+            // not `other.clear()`, so behavior is different!
+            other.clear();
         }
         return *this;
     }
@@ -128,7 +136,6 @@ public:
     // clang-format on
 
     constexpr void assign(size_type count, value_type const& value) noexcept {
-        FLUX_ASSERT(count <= capacity());
         clear();
         resize(count, value);
     }
@@ -163,7 +170,9 @@ public:
         return size() == 0;
     }
     constexpr void reserve([[maybe_unused]] size_type new_capacity) noexcept {
-        FLUX_ASSERT(new_capacity <= capacity());
+        FLUX_ASSERT(new_capacity <= capacity(),
+                    "reserve(new_capacity) new_capacity exceeds static_vector's capacity");
+        // Do nothing.
     }
 
     // Modifiers
@@ -180,19 +189,15 @@ public:
     }
 
     constexpr iterator insert(const_iterator position, value_type const& value) noexcept {
+        FLUX_ASSERT(size() < capacity(), "insert(position, value) called on a full static_vector");
         auto const insert_position = move_elements(position, 1);
         construct_in_place(insert_position, value);
         return insert_position;
     }
     constexpr iterator insert(const_iterator position, value_type&& value) noexcept {
+        FLUX_ASSERT(size() < capacity(), "insert(position, value) called on a full static_vector");
         auto const insert_position = move_elements(position, 1);
         construct_in_place(insert_position, value);
-        return insert_position;
-    }
-    constexpr iterator insert(const_iterator position, ::std::initializer_list<T> list) noexcept {
-        auto const count           = list.size();
-        auto const insert_position = move_elements(position, count);
-        ranges::uninitialized_copy_no_overlap(list.begin(), list.end(), insert_position);
         return insert_position;
     }
 
@@ -206,11 +211,11 @@ public:
             return insert_position;
         } else {
             auto current_position = const_to_mutable_it(position);
-            auto  middle_position = end();
+            auto middle_position  = end();
 
             // Place everything at the end.
             for (; first != last && size() < capacity(); ++first) {
-                emplace_one_at_back(*first);
+                construct_one_at_end(*first);
             }
 
             // Reached capacity.
@@ -230,6 +235,10 @@ public:
     }
     // clang-format on
 
+    constexpr iterator insert(const_iterator position, ::std::initializer_list<T> list) noexcept {
+        return insert(position, list.begin(), list.end());
+    }
+
     template <meta::container_compatible_range<T> Range>
     constexpr iterator insert_range(const_iterator position, Range&& range) noexcept {
         return insert(position, ::std::ranges::begin(range), ::std::ranges::end(range));
@@ -237,7 +246,7 @@ public:
 
     template <meta::container_compatible_range<T> Range>
     constexpr void append_range(Range&& range) noexcept {
-        insert(cend(), ::std::ranges::begin(range), ::std::ranges::end(range));
+        insert_range(cend(), ::std::forward<Range>(range));
     }
 
     template <typename... Args>
@@ -248,8 +257,9 @@ public:
     }
 
     constexpr iterator erase(const_iterator first, const_iterator last) noexcept {
-        FLUX_ASSERT(first <= last, "invalid range first > last");
-        FLUX_ASSERT(first >= cbegin() && last <= cend(), "iterators exceed container range");
+        FLUX_ASSERT(first <= last, "erase(first, last) called with invalid range");
+        FLUX_ASSERT(first >= cbegin() && last <= cend(),
+                    "erase(first, last) iterators out of bounds");
         auto const elements_to_move   = ranges::distance(last, cend());
         auto const elements_to_remove = ranges::distance(first, last);
 
@@ -285,26 +295,29 @@ public:
     // clang-format off
     template <typename... Args>
     constexpr reference emplace_back(Args&&... args) noexcept {
-        return emplace_one_at_back(::std::forward<Args>(args)...);
+        FLUX_ASSERT(size() < capacity(), "emplace_back(args...) called on a full static_vector");
+        return construct_one_at_end(::std::forward<Args>(args)...);
     }
     // clang-format on
 
     constexpr void push_back(value_type const& value) noexcept {
-        emplace_one_at_back(value);
+        FLUX_ASSERT(size() < capacity(), "push_back(value) called on a full static_vector");
+        construct_one_at_end(value);
     }
     constexpr void push_back(value_type&& value) noexcept {
-        emplace_one_at_back(::std::move(value));
+        FLUX_ASSERT(size() < capacity(), "push_back(value) called on a full static_vector");
+        construct_one_at_end(::std::move(value));
     }
 
     constexpr void pop_back() noexcept {
-        FLUX_ASSERT(!empty());
+        FLUX_ASSERT(!empty(), "pop_back() called on an empty static_vector");
         --size_;
         destroy_in_place(end());
     }
 
     constexpr void resize(size_type count, value_type const& value) noexcept {
-        FLUX_ASSERT(count <= capacity());
-
+        FLUX_ASSERT(count <= capacity(),
+                    "resize(count, value) count exceeds static_vector's capacity");
         // Reinitialize the new members if we are enlarging.
         while (size() < count) {
             construct_in_place(end(), value);
@@ -334,28 +347,34 @@ public:
 
     FLUX_ALWAYS_INLINE
     [[nodiscard]] constexpr reference front() noexcept {
+        FLUX_ASSERT(!empty(), "front() called on an empty static_vector");
         return get<reference>(storage_.front());
     }
     FLUX_ALWAYS_INLINE
     [[nodiscard]] constexpr const_reference front() const noexcept {
+        FLUX_ASSERT(!empty(), "front() called on an empty static_vector");
         return get<const_reference>(storage_.front());
     }
 
     FLUX_ALWAYS_INLINE
     [[nodiscard]] constexpr reference back() noexcept {
+        FLUX_ASSERT(!empty(), "back() called on an empty static_vector");
         return get<reference>(storage_[size() - 1]);
     }
     FLUX_ALWAYS_INLINE
     [[nodiscard]] constexpr const_reference back() const noexcept {
+        FLUX_ASSERT(!empty(), "back() called on an empty static_vector");
         return get<const_reference>(storage_[size() - 1]);
     }
 
     FLUX_ALWAYS_INLINE
     [[nodiscard]] constexpr reference operator[](size_type index) noexcept {
+        FLUX_ASSERT(index < size(), "static_vector[] index out of bounds");
         return get<reference>(storage_[index]);
     }
     FLUX_ALWAYS_INLINE
     [[nodiscard]] constexpr const_reference operator[](size_type index) const noexcept {
+        FLUX_ASSERT(index < size(), "static_vector[] index out of bounds");
         return get<const_reference>(storage_[index]);
     }
 
@@ -414,7 +433,7 @@ public:
             return;
         }
 
-        auto swap_impl = [](static_vector& a, static_vector& b) {
+        auto swap_impl = [](static_vector& a, static_vector& b) noexcept {
             auto b_last = b.end();
             auto a_it   = ::std::swap_ranges(b.begin(), b_last, a.begin());
             ranges::uninitialized_relocate_no_overlap(a_it, a.end(), b_last);
@@ -431,10 +450,13 @@ public:
     template <size_type OtherCapacity>
     [[nodiscard]] constexpr bool
     operator==(static_vector<T, OtherCapacity> const& other) const noexcept {
-        if (size() != other.size()) {
-            return false;
+        if constexpr (Capacity == OtherCapacity) {
+            if (addressof(other) == this) {
+                return true;
+            }
         }
-        return ::std::equal(begin(), end(), other.begin());
+
+        return ::std::ranges::equal(*this, other);
     }
 
     template <size_type OtherCapacity>
@@ -450,15 +472,15 @@ private:
 
     // clang-format off
     template <typename... Args>
-    constexpr reference emplace_one_at_back(Args&&... args) noexcept {
-        FLUX_ASSERT(size() + 1 <= capacity());
+    constexpr reference construct_one_at_end(Args&&... args) noexcept {
         construct_in_place(end(), ::std::forward<Args>(args)...);
         ++size_;
         return back();
     }
 
     constexpr iterator move_elements(const_iterator position, meta::integral auto n) noexcept {
-        FLUX_ASSERT(size() + static_cast<size_type>(n) <= capacity());
+        FLUX_ASSERT(size() + static_cast<size_type>(n) <= capacity(),
+                    "insert count exceeds static_vector's capacity");
         auto const elements_to_move = ranges::distance(position, cend());
         size_                      += static_cast<size_type>(n);
 
@@ -467,36 +489,6 @@ private:
         auto result = ranges::next(first, static_cast<difference_type>(n) + elements_to_move);
         [[maybe_unused]] auto out = ranges::uninitialized_relocate_backward(first, last, result);
         return first;
-
-        #if 0
-        size_type const begin_offset = static_cast<size_type>(position - begin());
-        size_type const   end_offset = begin_offset + static_cast<size_type>(n);
-
-        size_type const elements_to_move = size() - begin_offset;
-
-        size_type const from_index = begin_offset + elements_to_move - 1;
-        size_type const   to_index =   end_offset + elements_to_move - 1;
-
-        if constexpr (meta::trivially_relocatable<T>) {
-            if consteval {
-                for (size_type i = 0; i < elements_to_move; ++i) {
-                    relocate_at(get<pointer>(storage_[from_index - i]),
-                                get<pointer>(storage_[  to_index - i]));
-                }
-            } else {
-                detail::constexpr_memmove(get<pointer>(storage_[  end_offset]),
-                                          get<pointer>(storage_[begin_offset]),
-                                          elements_to_move);
-            }
-        } else {
-            for (size_type i = 0; i < elements_to_move; ++i) {
-                relocate_at(get<pointer>(storage_[from_index - i]),
-                            get<pointer>(storage_[  to_index - i]));
-            }
-        }
-        size_ += static_cast<size_type>(n);
-        return begin() + difference_type(begin_offset);
-        #endif
     }
     // clang-format on
 };

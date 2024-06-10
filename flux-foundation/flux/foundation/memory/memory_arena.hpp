@@ -71,8 +71,9 @@ struct [[nodiscard]] memory_block_stack final {
         auto* address = static_cast<::std::byte const*>(ptr);
         for (auto* node = head_; node; node = node->prev) {
             auto* memory = static_cast<::std::byte*>(static_cast<void*>(node)) + offset();
-            if (address >= memory && address < memory + node->size)
+            if (address >= memory && address < memory + node->size) {
                 return true;
+            }
         }
         return false;
     }
@@ -224,7 +225,7 @@ public:
         return used_blocks_.top();
     }
 
-    constexpr memory_block allocate_block() {
+    constexpr memory_block allocate_block() noexcept {
         if (!memory_cache::assign_block(used_blocks_)) {
             used_blocks_.push(allocator_type::allocate_block());
         }

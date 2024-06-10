@@ -10,5 +10,7 @@
 #include <flux/foundation/utility/iterator_adapter.hpp>
 #include <flux/foundation/utility/launder.hpp>
 #include <flux/foundation/utility/next.hpp>
+#include <flux/foundation/utility/noexcept_call.hpp>
 #include <flux/foundation/utility/terminate.hpp>
 #include <flux/foundation/utility/unreachable.hpp>
+#include <flux/foundation/utility/wrap_iter.hpp>

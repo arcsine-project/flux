@@ -200,6 +200,14 @@ struct [[nodiscard]] template_parameter<C<T>> final {
 
 template <typename T>
 using template_parameter_t = typename template_parameter<T>::type;
+
+template <bool Condition, typename Unique>
+struct non_trivial_if {};
+
+template <typename Unique>
+struct non_trivial_if<true, Unique> {
+  constexpr non_trivial_if() noexcept {}
+};
 // clang-format on
 
 } // namespace flux::meta

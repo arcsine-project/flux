@@ -169,7 +169,7 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
             CHECK_FALSE(v.empty());
             CHECK(v.capacity() == 5);
             STATIC_REQUIRE(decltype(v)::max_size() == 5);
-            CHECK(v == fou::static_vector{0, 0, 0, 0, 0});
+            CHECK(v.size() == 5);
         }
         {
             fou::static_vector<int, 5> v(5, 3);
@@ -316,10 +316,21 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
     }
 
     SECTION("equality operator") {
-        constexpr fou::static_vector v{1, 2, 3};
-        STATIC_REQUIRE(v == fou::static_vector{1, 2, 3});
-        STATIC_REQUIRE(v != fou::static_vector{1, 2, 1});
-        STATIC_REQUIRE(v != fou::static_vector{1, 2, 3, 4});
+        {
+            constexpr fou::static_vector v{1, 2, 3};
+            STATIC_REQUIRE(v == v);
+            STATIC_REQUIRE(v == fou::static_vector{1, 2, 3});
+            STATIC_REQUIRE(v != fou::static_vector{1, 2, 1});
+            STATIC_REQUIRE(v != fou::static_vector{1, 2, 3, 4});
+        }
+        {
+            fou::static_vector v{1, 2, 3};
+            CHECK(v == v);
+            CHECK_FALSE(v != v);
+            CHECK(v == fou::static_vector{1, 2, 3});
+            CHECK(v != fou::static_vector{1, 2, 1});
+            CHECK(v != fou::static_vector{1, 2, 3, 4});
+        }
     }
 
     SECTION("compare") {

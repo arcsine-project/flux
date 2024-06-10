@@ -1,6 +1,9 @@
 #pragma once
 
 // Whether or not the allocation size will be checked.
+#define FLUX_MEMORY_ENABLE_ALIGNED_ALLOC (1)
+
+// Whether or not the allocation size will be checked.
 #define FLUX_MEMORY_CHECK_ALLOCATION_SIZE (1)
 
 // Whether or not allocated memory will be filled with special values.
@@ -44,4 +47,12 @@
 
 #    undef FLUX_MEMORY_DEBUG_DOUBLE_FREE
 #    define FLUX_MEMORY_DEBUG_DOUBLE_FREE (0)
+#endif
+
+#if FLUX_MEMORY_DEBUG_FENCE
+#    define FLUX_MEMORY_DEBUG_FENCE_SIZE(size)   (size + (2u * max_alignment))
+#    define FLUX_MEMORY_DEBUG_UNFENCE_SIZE(size) (size -= (2u * max_alignment))
+#else
+#    define FLUX_MEMORY_DEBUG_FENCE_SIZE(size)   (size)
+#    define FLUX_MEMORY_DEBUG_UNFENCE_SIZE(size) (void)(size)
 #endif

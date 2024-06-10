@@ -1,4 +1,5 @@
 #include <flux/foundation.hpp>
+#    include <flux/foundation/memory/detail/malloc_allocator.hpp>
 
 #include <catch2/catch.hpp>
 #include <vector>

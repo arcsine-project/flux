@@ -18,6 +18,8 @@ struct [[nodiscard]] typeless_allocator final {
 
 using namespace flux;
 
+static_assert(meta::trivial<fou::std_allocator_adapter<int, fou::default_allocator>>);
+
 // clang-format off
 using std_stateful_allocator = fou::std_allocator_adapter<int, fou::test_allocator<::std::unordered_map>>;
 static_assert(meta::same_as<std_stateful_allocator::propagate_on_container_copy_assignment, meta::false_type>);

@@ -76,6 +76,18 @@ __asm__("HeapFree")
 #if (__has_cpp_attribute(__gnu__::__stdcall__) && !defined(__WINE__))
 [[__gnu__::__stdcall__]]
 #endif
+extern ::std::size_t FLUX_STDCALL HeapSize(void*, ::std::uint_least32_t, void const*) noexcept
+#if defined(FLUX_CLANG)
+__asm__("HeapSize")
+#endif
+;
+
+#if (__has_cpp_attribute(__gnu__::__dllimport__) && !defined(__WINE__))
+[[__gnu__::__dllimport__]]
+#endif
+#if (__has_cpp_attribute(__gnu__::__stdcall__) && !defined(__WINE__))
+[[__gnu__::__stdcall__]]
+#endif
 #if __has_cpp_attribute(__gnu__::__const__)
 [[__gnu__::__const__]]
 #endif

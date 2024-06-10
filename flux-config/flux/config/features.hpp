@@ -22,6 +22,12 @@
 #    define FLUX_STDCALL /* nothing */
 #endif
 
+#if __has_cpp_attribute(__gnu__::__may_alias__)
+#    define FLUX_MAY_ALIAS [[__gnu__::__may_alias__]]
+#else
+#    define FLUX_MAY_ALIAS /* nothing */
+#endif
+
 #if __has_cpp_attribute(msvc::no_unique_address)
 // MSVC implements [[no_unique_address]] as a silent no-op currently. If/when MSVC breaks its C++
 // ABI, it will be changed to work as intended. However, MSVC implements [[msvc::no_unique_address]]
