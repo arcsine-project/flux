@@ -114,6 +114,10 @@ concept copy_constructible = ::std::copy_constructible<T>;
 template <typename T>
 concept move_constructible = ::std::move_constructible<T>;
 
+template <typename T>
+concept sufficiently_move_constructible =
+        nothrow_move_constructible<T> or not copy_constructible<T>;
+
 template <typename T, typename U>
 concept trivially_lexicographically_comparable =
         same_as<remove_cv_t<T>, remove_cv_t<U>> and sizeof(T) == 1 and ::std::is_unsigned_v<T>;

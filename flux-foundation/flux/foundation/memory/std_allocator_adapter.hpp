@@ -183,7 +183,13 @@ public:
 
     [[nodiscard]] constexpr T* allocate(size_type n) noexcept {
         if consteval {
-            return static_cast<T*>(::operator new(n * sizeof(T)));
+            return static_cast<T*>(
+#if __has_builtin(__builtin_operator_new) >= 201802L
+                    __builtin_operator_new(n * sizeof(T), std::nothrow_t{})
+#else
+                    ::operator new(n * sizeof(T), ::std::nothrow_t{})
+#endif
+            );
         } else {
             return static_cast<T*>(low_level_allocator::allocate(n * sizeof(T)));
         }
@@ -200,7 +206,11 @@ public:
 
     constexpr void deallocate(T* ptr, size_type n) noexcept {
         if consteval {
-            ::operator delete(ptr);
+#if __has_builtin(__builtin_operator_new) >= 201802L
+            __builtin_operator_delete(ptr, ::std::nothrow_t{});
+#else
+            ::operator delete(ptr, ::std::nothrow_t{});
+#endif
         } else {
             low_level_allocator::deallocate((void*)ptr, n * sizeof(T));
         }

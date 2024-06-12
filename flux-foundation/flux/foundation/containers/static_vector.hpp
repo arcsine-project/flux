@@ -123,8 +123,8 @@ public:
             ranges::uninitialized_move(other.begin(), other.end(), begin());
             size_ = other.size_;
             // Clear `other` after the move-assignment. This is done for consistency with
-            // std::vector as well as the relocation case. But the trivial assignment operator does
-            // not `other.clear()`, so behavior is different!
+            // std::vector as well as the relocation case. But the trivial move assignment operator
+            // does not `other.clear()`, so behavior is different!
             other.clear();
         }
         return *this;

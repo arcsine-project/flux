@@ -2,7 +2,7 @@
 
 namespace flux::fou {
 
-// clang-format n
+// clang-format off
 // `It` - Any iterator (at least `InputIterator`);
 // `Fn` - Unary functor (`F: It -> T&`).
 template <meta::input_iterator It, meta::unary_functor<It> Fn>

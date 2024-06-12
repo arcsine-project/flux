@@ -151,12 +151,13 @@ public:
     }
 
     constexpr void assign(size_type count, value_type const& value) noexcept {
-        clear();
         if (capacity() < count) {
-            vreallocate_assign(count, value);
-        } else {
-            end_ = ranges::uninitialized_fill_n(end_, difference_type(count), value);
+            clear_and_reserve_geometric(count);
+        } else { // Just clear the vector if we have enough capacity.
+            clear();
         }
+
+        end_ = ranges::uninitialized_fill_n(end_, difference_type(count), value);
     }
     // constexpr void assign(::std::initializer_list<T> list) noexcept {
     //     clear();
@@ -179,7 +180,8 @@ public:
         // Reinitialize the new members if we are enlarging.
         if (size() < count) {
             if (capacity() < count) {
-                vreallocate(detail::grow_twice(count));
+                auto const new_capacity = detail::grow_twice(count);
+                vreallocate(new_capacity);
             }
 
             auto const n = static_cast<difference_type>(count - size());
@@ -311,6 +313,7 @@ public:
 
 private:
     constexpr void vallocate(size_type capacity) noexcept {
+        FLUX_ASSERT(capacity != 0, "vallocate(capacity) called with zero capacity");
         // clang-format off
         auto allocation = allocate_at_least(allocator_, capacity);
         end_            = begin_ = allocation.ptr;
@@ -319,41 +322,34 @@ private:
     }
 
     constexpr void vreallocate(size_type capacity) noexcept {
+        FLUX_ASSERT(capacity != 0, "vreallocate(capacity) called with zero capacity");
         // clang-format off
-        auto old_begin    = begin_;
-        auto old_end      = end_;
-        auto old_capacity = static_cast<size_type>(end_cap_ - begin_);
+        auto old_begin = begin_;
+        auto old_end   = end_;
 
-        auto [new_begin, new_capacity] = allocate_at_least(allocator_, capacity);
+        [[maybe_unused]] auto old_capacity = static_cast<size_type>(end_cap_ - begin_);
+        [[maybe_unused]] auto old_size     = static_cast<size_type>(end_ - begin_);
+
+        auto    [new_begin, new_capacity] = allocate_at_least(allocator_, capacity);
+        pointer  new_end;
         if constexpr (meta::relocatable<T>) {
-            auto new_end = ranges::uninitialized_relocate_no_overlap(old_begin,
-                                                                     old_end,
-                                                                     new_begin);
-        } else if constexpr (meta::nothrow_move_constructible<T>) {
-            auto new_end = ranges::uninitialized_move(old_begin, old_end, new_begin);
+            new_end = ranges::uninitialized_relocate_no_overlap(old_begin,
+                                                                old_end,
+                                                                new_begin);
+        } else if constexpr (meta::sufficiently_move_constructible<T>) {
+            new_end = ranges::uninitialized_move(old_begin, old_end, new_begin);
             destroy_range(old_begin, old_end);
         } else {
-            auto new_end = ranges::uninitialized_copy(old_begin, old_end, new_begin);
+            new_end = ranges::uninitialized_copy_no_overlap(old_begin, old_end, new_begin);
             destroy_range(old_begin, old_end);
         }
+        FLUX_ASSERT(new_begin + old_size == new_end,
+                    "vreallocate(capacity) failed to move memory");
         allocator_traits::deallocate(allocator_, old_begin, old_capacity);
         begin_   = new_begin;
         end_     = new_end;
         end_cap_ = new_begin + new_capacity;
         // clang-format on
-    }
-
-    constexpr void vreallocate_assign(size_type capacity, value_type const& value) noexcept {
-        auto old_begin    = begin_;
-        auto old_capacity = static_cast<size_type>(end_cap_ - begin_);
-
-        auto [new_begin, new_capacity] = allocate_at_least(allocator_, capacity);
-        auto count                     = static_cast<difference_type>(capacity);
-        auto new_end                   = ranges::uninitialized_fill_n(new_begin, count, value);
-        allocator_traits::deallocate(allocator_, old_begin, old_capacity);
-        begin_   = new_begin;
-        end_     = new_end;
-        end_cap_ = new_begin + new_capacity;
     }
 
     constexpr void vdeallocate() noexcept {
@@ -362,6 +358,14 @@ private:
             allocator_traits::deallocate(allocator_, begin_, capacity());
             begin_ = end_ = end_cap_ = nullptr;
         }
+    }
+
+    constexpr void clear_and_reserve_geometric(size_type capacity) noexcept {
+        FLUX_ASSERT(capacity != 0,
+                    "clear_and_reserve_geometric(capacity) called with zero capacity");
+        vdeallocate(); // Destroy and deallocate old memory.
+        auto const new_capacity = detail::grow_twice(capacity);
+        vallocate(new_capacity);
     }
 
     template <meta::input_iterator Iterator, meta::sentinel_for<Iterator> Sentinel>
@@ -394,11 +398,10 @@ private:
         // clang-format off
         if (allocator_ != other.allocator_) {
             // The rvalue's allocator cannot be moved and is not equal,
-            // so we need to individually move each element.            
+            // so we need to individually move each element.
             if (auto const other_size = other.size(); capacity() < other_size) {
-                vdeallocate();
-                vallocate(other_size);
-            } else {
+                clear_and_reserve_geometric(other_size);
+            } else { // Just clear the vector if we have enough capacity.
                 clear();
             }
 
