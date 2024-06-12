@@ -192,7 +192,7 @@ protected:
     constexpr ~direct_storage() noexcept = default;
 
     constexpr bool is_composable() const noexcept {
-        return is_composable_allocator<allocator_type>;
+        return is_composable_allocator_v<allocator_type>;
     }
 };
 
@@ -332,7 +332,7 @@ protected:
     constexpr ~reference_storage() = default;
 
     constexpr bool is_composable() const noexcept {
-        return is_composable_allocator<allocator_type>;
+        return is_composable_allocator_v<allocator_type>;
     }
 };
 
@@ -422,7 +422,7 @@ template <> class [[nodiscard]] reference_storage<any_allocator> {
         }
 
         constexpr void* try_allocate_node(size_type size, size_type alignment) noexcept override {
-            if constexpr (is_composable_allocator<allocator_type>)
+            if constexpr (is_composable_allocator_v<allocator_type>)
                 return composable_traits::try_allocate_node(allocator(), size, alignment);
             else
                 return nullptr;
@@ -430,7 +430,7 @@ template <> class [[nodiscard]] reference_storage<any_allocator> {
 
         constexpr void* try_allocate_array(size_type count, size_type size,
                                            size_type alignment) noexcept override {
-            if constexpr (is_composable_allocator<allocator_type>)
+            if constexpr (is_composable_allocator_v<allocator_type>)
                 return composable_traits::try_allocate_array(allocator(), count, size, alignment);
             else
                 return nullptr;
@@ -438,7 +438,7 @@ template <> class [[nodiscard]] reference_storage<any_allocator> {
 
         constexpr bool try_deallocate_node(void* node, size_type size,
                                            size_type alignment) noexcept override {
-            if constexpr (is_composable_allocator<allocator_type>)
+            if constexpr (is_composable_allocator_v<allocator_type>)
                 return composable_traits::try_deallocate_node(allocator(), node, size, alignment);
             else
                 return false;
@@ -446,7 +446,7 @@ template <> class [[nodiscard]] reference_storage<any_allocator> {
 
         constexpr bool try_deallocate_array(void* array, size_type count, size_type size,
                                             size_type alignment) noexcept override {
-            if constexpr (is_composable_allocator<allocator_type>)
+            if constexpr (is_composable_allocator_v<allocator_type>)
                 return composable_traits::try_deallocate_array(allocator(), array, count, size,
                                                                alignment);
             else
@@ -454,7 +454,7 @@ template <> class [[nodiscard]] reference_storage<any_allocator> {
         }
 
         constexpr bool is_composable() const noexcept override {
-            return is_composable_allocator<allocator_type>;
+            return is_composable_allocator_v<allocator_type>;
         }
 
         constexpr size_type max_size(query_type type) const noexcept override {

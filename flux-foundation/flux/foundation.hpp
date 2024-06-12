@@ -7,4 +7,5 @@
 #include <flux/foundation/types.hpp>
 #include <flux/foundation/utility.hpp>
 #include <flux/foundation/memory.hpp>
+#include <flux/foundation/containers.hpp>
 // clang-format on

@@ -8,22 +8,28 @@ using ::std::common_reference_with;
 using ::std::constructible_from;
 using ::std::contiguous_iterator;
 using ::std::convertible_to;
+using ::std::copyable;
 using ::std::default_initializable;
 using ::std::derived_from;
+using ::std::equality_comparable_with;
 using ::std::forward_iterator;
 using ::std::indirectly_copyable;
 using ::std::indirectly_movable;
 using ::std::input_iterator;
 using ::std::input_or_output_iterator;
 using ::std::integral;
+using ::std::invocable;
 using ::std::movable;
 using ::std::predicate;
 using ::std::random_access_iterator;
 using ::std::same_as;
 using ::std::sentinel_for;
 using ::std::sized_sentinel_for;
+using ::std::totally_ordered_with;
+using ::std::ranges::bidirectional_range;
 using ::std::ranges::input_range;
 using ::std::ranges::range;
+using ::std::ranges::sized_range;
 
 template <typename T, ::std::size_t Size>
 concept same_size = requires { requires sizeof(T) == Size; };
@@ -56,6 +62,8 @@ concept standard_layout = ::std::is_standard_layout_v<T>;
 
 template <typename T>
 concept default_constructible = ::std::is_default_constructible_v<T>;
+template <typename T>
+concept nothrow_default_constructible = ::std::is_nothrow_default_constructible_v<T>;
 
 template <typename T>
 concept trivially_constructible = ::std::is_trivially_constructible_v<T>;
@@ -106,6 +114,10 @@ concept copy_constructible = ::std::copy_constructible<T>;
 template <typename T>
 concept move_constructible = ::std::move_constructible<T>;
 
+template <typename T>
+concept sufficiently_move_constructible =
+        nothrow_move_constructible<T> or not copy_constructible<T>;
+
 template <typename T, typename U>
 concept trivially_lexicographically_comparable =
         same_as<remove_cv_t<T>, remove_cv_t<U>> and sizeof(T) == 1 and ::std::is_unsigned_v<T>;
@@ -154,6 +166,8 @@ concept integer = ::std::integral<T> and not same_as<remove_cvref_t<T>, bool>;
 template <typename T>
 concept unsigned_integer = ::std::unsigned_integral<T> and not same_as<remove_cvref_t<T>, bool>;
 
+template <typename T>
+concept not_void = not ::std::is_void_v<T>;
 template <typename... Ts>
 concept not_volatile = (not ::std::is_volatile_v<Ts> and ...);
 
@@ -198,12 +212,30 @@ concept has_to_address = requires(T const p) { p.to_address(); } or
 template <typename T>
 concept has_arrow_operator = requires(T const p) { p.operator->(); };
 
-template <typename InputIterator, typename OutputIterator>
+template <typename OutputIterator, typename InputIterator>
 concept iter_move_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_rvref_t<InputIterator>>;
 
-template <typename InputIterator, typename OutputIterator>
+template <typename OutputIterator, typename InputIterator>
 concept iter_copy_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_ref_t<InputIterator>>;
+
+template <typename Range, typename T>
+concept container_compatible_range = input_range<Range> and convertible_to<range_ref_t<Range>, T>;
+
+// clang-format off
+template <typename T>
+concept is_byte = same_as<T, char>
+               or same_as<T, signed char>
+               or same_as<T, unsigned char>
+               or same_as<T, ::std::byte>
+               #if defined(__cpp_char8_t)
+               or same_as<T, char8_t>
+               #endif
+               ;
+// clang-format on
+
+template <typename Fn, typename It>
+concept unary_functor = invocable<Fn, iter_ref_t<It>>;
 
 } // namespace flux::meta

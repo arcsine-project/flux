@@ -38,6 +38,8 @@ template <typename T>
 using range_ref_t = ::std::ranges::range_reference_t<T>;
 template <typename T>
 using range_rvref_t = ::std::ranges::range_rvalue_reference_t<T>;
+template <typename T>
+using range_diff_t = ::std::ranges::range_difference_t<T>;
 
 template <typename T>
 using borrowed_iter_t = ::std::ranges::borrowed_iterator_t<T>;
@@ -198,6 +200,14 @@ struct [[nodiscard]] template_parameter<C<T>> final {
 
 template <typename T>
 using template_parameter_t = typename template_parameter<T>::type;
+
+template <bool Condition, typename Unique>
+struct non_trivial_if {};
+
+template <typename Unique>
+struct non_trivial_if<true, Unique> {
+  constexpr non_trivial_if() noexcept {}
+};
 // clang-format on
 
 } // namespace flux::meta

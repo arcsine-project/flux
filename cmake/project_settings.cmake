@@ -1,5 +1,8 @@
 include(CTest)
 include(CheckLanguage)
+include(CheckFunctionExists)
+include(CheckIncludeFile)
+include(CheckSymbolExists)
 
 check_language(OBJC)
 if(CMAKE_OBJC_COMPILER)
@@ -90,6 +93,49 @@ function(flux_set_target_architecture _OUT)
 
     set(${_OUT} "${_FLUX_TARGET_ARCH}" PARENT_SCOPE)
 endfunction(flux_set_target_architecture)
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Check system libraries, options, etc.
+#-----------------------------------------------------------------------------------------------------------------------
+
+option(FLUX_ENABLE_MEMALIGN "Enable memory alignment functions for allocation." YES)
+
+if(FLUX_ENABLE_MEMALIGN)
+    enable_language(C)
+
+    if(WIN32)
+        check_include_file(stdlib.h FLUX_HAS_STDLIB_H)
+        if(FLUX_HAS_STDLIB_H)
+            check_symbol_exists(aligned_alloc stdlib.h FLUX_HAS_C11_ALIGNED_ALLOC)
+        endif()
+
+        check_include_file(malloc.h FLUX_HAS_MALLOC_H)
+        if(FLUX_HAS_MALLOC_H)
+            check_symbol_exists(_aligned_malloc  malloc.h FLUX_HAS_WIN32_ALIGNED_MALLOC)
+            check_symbol_exists(_aligned_realloc malloc.h FLUX_HAS_WIN32_ALIGNED_REALLOC)
+            check_symbol_exists(_aligned_free    malloc.h FLUX_HAS_WIN32_ALIGNED_FREE)
+            check_symbol_exists(_aligned_msize   malloc.h FLUX_HAS_WIN32_ALIGNED_MSIZE)
+            check_symbol_exists(_msize           malloc.h FLUX_HAS_WIN32_MSIZE)
+        endif()
+    else()
+        check_include_file(stdlib.h FLUX_HAVE_STDLIB_H)
+        if(FLUX_HAS_STDLIB_H)
+            check_symbol_exists(posix_memalign stdlib.h FLUX_HAS_POSIX_MEMALIGN)
+            check_symbol_exists(aligned_alloc  stdlib.h FLUX_HAS_C11_ALIGNED_ALLOC)
+        endif()
+
+        check_include_file(malloc.h FLUX_HAS_MALLOC_H)
+        if(FLUX_HAS_MALLOC_H)
+            check_symbol_exists(memalign           malloc.h FLUX_HAS_MEMALIGN)
+            check_symbol_exists(malloc_usable_size malloc.h FLUX_HAS_GNU_MALLOC_SIZE)
+        endif()
+
+        check_include_file(malloc/malloc.h FLUX_HAS_MALLOC_MALLOC_H)
+        if(FLUX_HAS_MALLOC_MALLOC_H)
+            check_symbol_exists(malloc_size malloc/malloc.h FLUX_HAS_OSX_MALLOC_SIZE)
+        endif()
+    endif()
+endif()
 
 function(flux_add_graphics_definitions _TARGET_GRAPHICS)
     string(TOUPPER ${_TARGET_GRAPHICS} GRAPHICS)
@@ -375,10 +421,12 @@ function(_flux_static_library _ARG_NAME)
     set(_TARGET "flux_${_ARG_NAME}")
     add_library(${_TARGET} STATIC)
     add_library("flux::${_ARG_NAME}" ALIAS ${_TARGET})
-    target_include_directories(${_TARGET} PUBLIC "${CMAKE_CURRENT_LIST_DIR}" "${_ARG_INCLUDE_DIR}")
+    target_include_directories(${_TARGET}
+                               PUBLIC "${CMAKE_CURRENT_LIST_DIR}"
+                                      "${_ARG_INCLUDE_DIR}")
     target_link_libraries(${_TARGET}
-                          PUBLIC  flux::project_settings
-                                  "${_ARG_LINK}")
+                          PUBLIC flux::project_settings
+                                 "${_ARG_LINK}")
     target_sources(${_TARGET} PRIVATE "${_ARG_SOURCE}")
     install(TARGETS ${_TARGET}
             ARCHIVE DESTINATION flux-${_ARG_NAME}/lib)
@@ -636,6 +684,37 @@ target_compile_options(flux::project_settings INTERFACE
     # Disable generation of information about every class with virtual functions for use by the C++ runtime type
     # identification features (`dynamic_cast' and `typeid').
     -fno-rtti)
+
+# Check for C11 aligned_alloc.
+if(FLUX_HAS_C11_ALIGNED_ALLOC)
+    target_compile_definitions(flux::project_settings INTERFACE FLUX_HAS_C11_ALIGNED_ALLOC=1)
+endif()
+
+# Check for win32 _aligned_malloc.
+if(FLUX_HAS_WIN32_ALIGNED_MALLOC AND FLUX_HAS_WIN32_ALIGNED_FREE)
+    target_compile_definitions(flux::project_settings INTERFACE FLUX_HAS_WIN32_ALIGNED_MALLOC=1)
+    if(FLUX_HAS_WIN32_ALIGNED_REALLOC)
+        target_compile_definitions(flux::project_settings INTERFACE FLUX_HAS_WIN32_ALIGNED_REALLOC=1)
+    endif()
+endif()
+
+# Check for memalign or posix_memalign.
+if(FLUX_HAS_POSIX_MEMALIGN)
+    target_compile_definitions(flux::project_settings INTERFACE FLUX_HAS_POSIX_MEMALIGN=1)
+endif()
+
+if(FLUX_HAS_MEMALIGN)
+    target_compile_definitions(flux::project_settings INTERFACE FLUX_HAS_MEMALIGN=1)
+endif()
+
+# Check for malloc_usable_size or malloc_size.
+if(FLUX_HAS_GNU_MALLOC_SIZE)
+    target_compile_definitions(flux::project_settings INTERFACE FLUX_HAS_GNU_MALLOC_SIZE=1)
+endif()
+
+if(FLUX_HAS_OSX_MALLOC_SIZE)
+    target_compile_definitions(flux::project_settings INTERFACE FLUX_HAS_OSX_MALLOC_SIZE=1)
+endif()
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Sanitizers.

@@ -1,6 +1,5 @@
 #pragma once
 #include <flux/foundation/memory/detail/construct_at.hpp>
-#include <flux/foundation/memory/detail/to_address.hpp>
 
 namespace flux::fou {
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <flux/foundation/memory/allocation_result.hpp>
 #include <flux/foundation/memory/debugging.hpp>
 #include <flux/foundation/utility/terminate.hpp>
 
@@ -45,8 +46,9 @@ inline void* win32_heaprealloc_common(void* address, ::std::size_t size,
 // clang-format off
 // Low-level allocator.
 struct [[nodiscard]] win32_heap_allocator final {
-    using size_type       = ::std::size_t;
-    using difference_type = ::std::ptrdiff_t;
+    using size_type         = ::std::size_t;
+    using difference_type   = ::std::ptrdiff_t;
+    using allocation_result = allocation_result<void*, size_type>;
 
     static inline auto info() noexcept {
         return allocator_info{"flux::fou::detail::win32_heap_allocator", nullptr};
@@ -55,7 +57,8 @@ struct [[nodiscard]] win32_heap_allocator final {
 #if __has_cpp_attribute(__gnu__::__malloc__)
     [[__gnu__::__malloc__]]
 #endif
-    static inline void* allocate(size_type size, size_type) noexcept {
+    static inline void* allocate(size_type                  size,
+                                 [[maybe_unused]] size_type alignment = 0) noexcept {
         return win32_heapalloc_common(size, 0u);
     }
 
@@ -63,11 +66,26 @@ struct [[nodiscard]] win32_heap_allocator final {
         return win32_heaprealloc_common(memory, size, 0u);
     }
 
-    static inline void deallocate(void* memory, size_type, size_type) noexcept {
-        if (!memory)
+    static inline void deallocate(void*                      memory,
+                                  [[maybe_unused]] size_type size = 0,
+                                  [[maybe_unused]] size_type alignment = 0) noexcept {
+        if (!memory) {
             return;
+        }
 
         win32::HeapFree(win32::GetProcessHeap(), 0u, memory);
+    }
+
+    static inline allocation_result allocate_at_least(size_type size) noexcept {
+        auto process_heap = win32::GetProcessHeap();
+        auto memory       = win32_heapalloc_common(size, 0u);
+	    return {memory, win32::HeapSize(process_heap, 0, memory)};
+    }
+
+    static inline allocation_result reallocate_at_least(void* memory, size_type size) noexcept {
+        auto process_heap = win32::GetProcessHeap();
+        auto new_memory   = win32_heaprealloc_common(memory, size, 0u);
+	    return {new_memory, win32::HeapSize(process_heap, 0, new_memory)};
     }
 
     static inline size_type max_size() noexcept {
