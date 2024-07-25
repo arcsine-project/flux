@@ -6,6 +6,12 @@
 #    define FLUX_NO_SANITIZE(...)
 #endif
 
+#if __has_attribute(__no_sanitize__)
+#    define FLUX_NO_CFI __attribute__((__no_sanitize__("cfi")))
+#else
+#    define FLUX_NO_CFI /* nothing */
+#endif
+
 #if __has_cpp_attribute(__gnu__::__always_inline__)
 #    define FLUX_ALWAYS_INLINE [[__gnu__::__always_inline__]]
 #elif __has_cpp_attribute(clang::always_inline)

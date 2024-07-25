@@ -1,5 +1,7 @@
 #pragma once
 
+#include <flux/foundation/containers/detail/temp_value.hpp>
+
 // TODO:
 //  * Implement wrap_iter for vector;
 //  * Implement rebind for std_allocator_adapter, so it can be fully compatible;
@@ -53,7 +55,7 @@ class [[nodiscard, clang::trivial_abi]] vector final {
 
 public:
     using value_type             = T;
-    using allocator_type         = default_allocator_type;
+    using allocator_type         = Allocator;
     using size_type              = typename allocator_traits::size_type;
     using difference_type        = typename allocator_traits::difference_type;
     using pointer                = T*;
@@ -76,7 +78,9 @@ public:
     FLUX_NO_UNIQUE_ADDRESS pointer        end_cap_   = {};
     FLUX_NO_UNIQUE_ADDRESS allocator_type allocator_ = {};
 
-    constexpr vector() noexcept {}
+    constexpr vector() noexcept {
+        // Do nothing.
+        }
 
     constexpr explicit vector(size_type count) noexcept {
         if (count > 0) {
@@ -156,7 +160,7 @@ public:
         } else { // Just clear the vector if we have enough capacity.
             clear();
         }
-
+        // Re-assign the vector with new values.
         end_ = ranges::uninitialized_fill_n(end_, difference_type(count), value);
     }
     // constexpr void assign(::std::initializer_list<T> list) noexcept {
@@ -197,6 +201,29 @@ public:
         requires meta::default_constructible<T>
     {
         resize(count, value_type{});
+    }
+
+    template <typename... Args>
+    constexpr iterator emplace(const_iterator position, Args&&... args) noexcept {
+        pointer whereptr = begin_ + (position - begin());
+        if (end_ < end_cap_) {
+            if (whereptr == end_) {
+                construct_one_at_end(::std::forward<Args>(args)...);
+            } else {
+                move_elements(/* from: */ whereptr, /* by: */ 1);
+                construct_in_place(whereptr, ::std::forward<Args>(args)...);
+            }
+
+            return iterator{whereptr};
+        }
+
+        return iterator{emplace_reallocate(whereptr, ::std::forward<Args>(args)...)};
+    }
+    
+    template <typename... Args>
+    constexpr reference emplace_back(Args&&... args) noexcept {
+        FLUX_ASSERT(size() < capacity(), "emplace_back(args...) called on a full static_vector");
+        return construct_one_at_end(::std::forward<Args>(args)...);
     }
 
     // Capacity
@@ -323,13 +350,13 @@ private:
 
     constexpr void vreallocate(size_type capacity) noexcept {
         FLUX_ASSERT(capacity != 0, "vreallocate(capacity) called with zero capacity");
-        // clang-format off
         auto old_begin = begin_;
         auto old_end   = end_;
 
-        [[maybe_unused]] auto old_capacity = static_cast<size_type>(end_cap_ - begin_);
-        [[maybe_unused]] auto old_size     = static_cast<size_type>(end_ - begin_);
+        [[maybe_unused]] auto const old_capacity = static_cast<size_type>(end_cap_ - begin_);
+        [[maybe_unused]] auto const old_size     = static_cast<size_type>(end_ - begin_);
 
+        // clang-format off
         auto    [new_begin, new_capacity] = allocate_at_least(allocator_, capacity);
         pointer  new_end;
         if constexpr (meta::relocatable<T>) {
@@ -343,13 +370,53 @@ private:
             new_end = ranges::uninitialized_copy_no_overlap(old_begin, old_end, new_begin);
             destroy_range(old_begin, old_end);
         }
-        FLUX_ASSERT(new_begin + old_size == new_end,
-                    "vreallocate(capacity) failed to move memory");
+        // clang-format on
+        FLUX_ASSERT(new_begin + old_size == new_end, "vreallocate(capacity) failed to move memory");
         allocator_traits::deallocate(allocator_, old_begin, old_capacity);
         begin_   = new_begin;
         end_     = new_end;
         end_cap_ = new_begin + new_capacity;
+    }
+
+    template <typename... Args>
+    constexpr pointer emplace_reallocate(pointer const position, Args&&... args) noexcept {
+        // Reallocate and insert by perfectly forwarding `args` at `position`.
+        FLUX_ASSERT(end_ == end_cap_, "emplace_reallocate(position, args) called on a full vector");
+        auto       old_begin       = begin_;
+        auto       old_end         = end_;
+        auto const old_size        = static_cast<size_type>(end_ - begin_);
+        auto const position_offset = static_cast<size_type>(position - begin_);
+
+        // clang-format off
+        auto const new_size            = old_size + 1;
+        auto [new_begin, new_capacity] =
+                allocate_at_least(allocator_, detail::grow_twice(new_size));
         // clang-format on
+        construct_in_place(new_begin + position_offset, ::std::forward<Args>(args)...);
+
+        if (position == end_) { // at back, provide strong guarantee
+            if constexpr (meta::relocatable<T>) {
+                ranges::uninitialized_relocate_no_overlap(old_begin, old_end, new_begin);
+            } else if constexpr (meta::sufficiently_move_constructible<T>) {
+                ranges::uninitialized_move(old_begin, old_end, new_begin);
+                destroy_range(old_begin, old_end);
+            } else {
+                ranges::uninitialized_copy_no_overlap(old_begin, old_end, new_begin);
+                destroy_range(old_begin, old_end);
+            }
+        } else { // provide basic guarantee
+            // clang-format off
+            ranges::uninitialized_relocate_no_overlap(old_begin, old_end, new_begin);
+            ranges::uninitialized_relocate_no_overlap(position , old_end,
+                                                      new_begin + position_offset + 1);
+            // clang-format on
+        }
+        allocator_traits::deallocate(allocator_, old_begin, capacity());
+        begin_   = new_begin;
+        end_     = new_begin + new_size;
+        end_cap_ = new_begin + new_capacity;
+
+        return begin_ + position_offset;
     }
 
     constexpr void vdeallocate() noexcept {
@@ -431,6 +498,27 @@ private:
     constexpr void copy_assign_alloc(vector& other, meta::false_type) noexcept {
         (void)other;
     }
+
+    // clang-format off
+    template <typename... Args>
+    constexpr reference construct_one_at_end(Args&&... args) noexcept {
+        FLUX_ASSERT(end_ != end_cap_, "construct_one_at_end(args) called on a full vector");
+        construct_in_place(end_, ::std::forward<Args>(args)...);
+        ++end_;
+        return back();
+    }  
+
+    constexpr iterator move_elements(pointer position, meta::integral auto n) noexcept {
+        auto const elements_to_move = ranges::distance(position, end_);
+        end_                       += static_cast<size_type>(n);
+
+        auto first  = position;
+        auto last   = ranges::next(first, elements_to_move);
+        auto result = ranges::next(first, static_cast<difference_type>(n) + elements_to_move);
+        ranges::uninitialized_relocate_backward(first, last, result);
+        return first;
+    }
+    // clang-format on
 };
 
 } // namespace flux::fou
