@@ -82,8 +82,8 @@ int main() {
     glfwInit();
     flux::log::info("GLFW initialized successfully.");
 
-    GLFWwindow* window1 = create_window("Window 1", 4, 6);
-    GLFWwindow* window2 = create_window("Window 2", 4, 5);
+    GLFWwindow* window1 = create_window("Window 1", 4, 1);
+    GLFWwindow* window2 = create_window("Window 2", 4, 1);
 
     if (!window1 || !window2) {
         flux::log::error("Failed to create GLFW window.");
