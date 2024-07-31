@@ -1,9 +1,4 @@
-# flux_interface_library(meta
-#     COMMON
-#         LINK
-#             flux::config)
-
-xxx_flux_interface_library(meta
+flux_interface_library(meta
     COMMON
         HEADERS
             "flux/meta/compare.hpp"

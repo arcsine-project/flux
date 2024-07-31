@@ -1,4 +1,5 @@
 #pragma once
+#include <fast_io.h>
 
 namespace flux::io {
 

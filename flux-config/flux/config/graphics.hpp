@@ -1,3 +1,4 @@
+// IWYU pragma: private, include "../config.hpp"
 #pragma once
 
 #ifdef FLUX_TARGET_OPENGL
