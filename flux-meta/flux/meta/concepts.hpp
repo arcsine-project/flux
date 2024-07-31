@@ -1,4 +1,9 @@
+// IWYU pragma: private, include "../meta.hpp"
 #pragma once
+#include <flux/meta/declval.hpp>
+#include <flux/meta/type_traits.hpp>
+
+#include <cstddef>
 
 namespace flux::meta {
 
@@ -205,5 +210,44 @@ concept iter_move_constructible =
 template <typename InputIterator, typename OutputIterator>
 concept iter_copy_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_ref_t<InputIterator>>;
+
+// clang-format off
+template <typename InputIterator, typename OutputIterator>
+struct [[nodiscard]] is_memcpyable final {
+    using T = iter_value_t<OutputIterator>;
+    using U = decltype(::std::ranges::iter_move(declval<InputIterator&&>()));
+
+    static constexpr bool value = same_as<T, remove_ref_t<U>> and trivially_copyable<T>;
+};
+
+template <typename InputIterator, typename OutputIterator>
+inline constexpr bool is_memcpyable_v = is_memcpyable<InputIterator, OutputIterator>::value;
+
+template <typename T>
+concept addressable = pointer<T> or has_to_address<T> or has_arrow_operator<T>;
+
+template <typename InputIterator, typename OutputIterator>
+concept contiguous = contiguous_iterator<InputIterator >
+                 and contiguous_iterator<OutputIterator>;
+
+template <typename InputIterator, typename OutputIterator>
+concept memcpyable = contiguous     <InputIterator, OutputIterator>
+                 and addressable    <OutputIterator>
+                 and is_memcpyable_v<InputIterator, OutputIterator>
+                 and not_volatile   <InputIterator, OutputIterator>;
+
+template <typename T>
+concept relocatable = move_constructible<T> and destructible<T>;
+
+template <typename T>
+concept trivially_relocatable = trivially_copyable<T>;
+// clang-format on
+
+template <typename T, typename U>
+concept same_trivially_relocatable =
+        not_volatile<T, U> and is_same_uncvref_v<T, U> and trivially_relocatable<remove_cvref_t<U>>;
+
+template <typename Src, typename Dest>
+concept relocatable_from = nothrow_constructible<Dest, Src> and nothrow_destructible<Src>;
 
 } // namespace flux::meta

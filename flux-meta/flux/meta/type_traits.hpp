@@ -1,4 +1,10 @@
+// IWYU pragma: private, include "../meta.hpp"
+// IWYU pragma: friend "meta/.*"
 #pragma once
+#include <iterator>
+#include <ranges>
+#include <type_traits>
+#include <tuple>
 
 namespace flux::meta {
 
