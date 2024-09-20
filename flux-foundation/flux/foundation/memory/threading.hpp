@@ -5,6 +5,7 @@
 #include <flux/foundation/memory/allocator_traits.hpp>
 
 #include <mutex>
+#include <utility>
 
 namespace flux::fou {
 
