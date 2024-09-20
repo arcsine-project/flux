@@ -1,6 +1,6 @@
 #pragma once
-#include <flux/meta.hpp>
 #include <flux/io.hpp>
+#include <flux/meta.hpp>
 
 // This is a workaround for writing your own constexpr `construct_at` if you don't want to
 // pull everything found in the <memory> header. Currently, this hack only works with Clang.

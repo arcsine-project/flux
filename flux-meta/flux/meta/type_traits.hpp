@@ -3,8 +3,8 @@
 #pragma once
 #include <iterator>
 #include <ranges>
-#include <type_traits>
 #include <tuple>
+#include <type_traits>
 
 namespace flux::meta {
 
