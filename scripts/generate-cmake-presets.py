@@ -1,10 +1,25 @@
 import common
+import argparse
 from typing import List, Tuple
 
 class CMakePresetsGenerator:
-    def __init__(self) -> None:
+    # Static dictionary to map graphic API strings.
+    __graphic_api_to_str = {
+        "opengl": "OpenGL",
+        "metal": "Metal",
+        "vulkan": "Vulkan",
+        "directx": "DirectX"
+    }
+
+    def __init__(self, arch: str, compiler: str, gapi: str) -> None:
         common.detect_git()
         common.detect_cmake()
+
+        self.arch = arch
+        print(f"Selected architecture: {self.arch}")
+
+        self.gapi = gapi
+        print(f"Selected graphic API: {self.gapi}")
 
         self.os = common.detect_os()
         print(f"Detected operating system: {self.os}")
@@ -12,10 +27,10 @@ class CMakePresetsGenerator:
         self.ninja = common.detect_ninja()
         print(f"Ninja found at: {self.ninja}")
 
-        self.clang = common.detect_cxx_compiler("clang")
+        self.clang = common.detect_c_compiler(compiler)
         print(f"Clang found at: {self.clang}")
 
-        self.clangxx = common.detect_cxx_compiler("clang++")
+        self.clangxx = common.detect_cxx_compiler(compiler)
         print(f"Clang++ found at: {self.clangxx}")
 
         self.project_root = common.get_project_root()
@@ -24,21 +39,24 @@ class CMakePresetsGenerator:
         self.osx_variables = ""
 
     def __get_supported_archs(self) -> List[str]:
-        if "MacOSX" == self.os:
-            return ["arm64", "x86_64"]
+        if "native" == self.arch:
+            if "MacOSX" == self.os:
+                return ["arm64", "x86_64"]
+            else:
+                return ["x86_64"]
 
-        return ["x86_64"]
+        if "arm64" == self.arch and "MacOSX" != self.os:
+            raise ValueError(f"{self.arch} isn't supported on {self.os}.")
+
+        return [self.arch]
 
     def __get_supported_gapis(self) -> List[Tuple[str, str]]:
-        # Currently only OpenGL is supported
-        # if "MacOSX" == self.os:
-        #     return [("OpenGL", ""), ("Metal", "")]
-        # elif "Windows" == self.os:
-        #     return [("OpenGL", ""), ("Vulkan", ""), ("DirectX", "")]
-        # else:
-        #     return [("OpenGL", ""), ("Vulkan", "")]
+        # Currently only OpenGL is supported.
+        graphic_api = self.__graphic_api_to_str[self.gapi]
+        if "OpenGL" != graphic_api:
+            raise ValueError(f"{graphic_api} is not supported. Only OpenGL is currently supported.")
 
-        return [("OpenGL", "")]
+        return [(graphic_api, "")]
 
     def __generate_config_presets(self) -> str:
         config_presets_json = ""
@@ -99,10 +117,6 @@ class CMakePresetsGenerator:
 
         return config_presets_json
 
-    def print_presets(self) -> None:
-        result = self.__generate_config_presets("OpenGL", "")
-        print(result)
-
     def generate_cmake_presets(self) -> None:
         with open(f"{self.project_root}/CMakePresets.json", "w") as cmake_presets:
             cmake_presets.write(f"""\
@@ -122,8 +136,17 @@ class CMakePresetsGenerator:
 }}""")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="CMakePresetsGenerator",
+                                     description="Script for generating CMakePresets file.")
+    parser.add_argument("--arch", choices=["native", "x86_64", "arm64"], default="native",
+                        help="supported architectures (default: %(default)s)")
+    parser.add_argument("--compiler", choices=["clang", "gcc", "msvc"], default="clang",
+                        help="gcc and msvc compilers are not currently supported (default: %(default)s)")
+    parser.add_argument("--gapi", choices=["opengl", "metal", "vulkan", "directx"], default="opengl",
+                        help="metal, vulkan and directx graphic APIs are not currently supported (default: %(default)s)")
+    args = parser.parse_args()
     try:
-        presets_generator = CMakePresetsGenerator()
+        presets_generator = CMakePresetsGenerator(args.arch, args.compiler, args.gapi)
         presets_generator.generate_cmake_presets()
     except Exception as e:
         print(e)

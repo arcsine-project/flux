@@ -5,6 +5,7 @@ import shutil
 import glob
 import os
 from typing import Optional, Tuple
+from enum import Enum
 
 # Returns the absolute path to the root directory of the project.
 def get_project_root() -> str:
@@ -70,6 +71,9 @@ def detect_cmake() -> str:
 
     return cmake_path
 
+class compiler(Enum):
+    clang = 1,
+
 def detect_macports_clang(clang_name: str) -> Tuple[Optional[str], str]:
     macports_clang_paths = glob.glob(f"/opt/local/bin/{clang_name}-mp-*")
     if not macports_clang_paths:
@@ -94,6 +98,9 @@ def detect_macports_clang(clang_name: str) -> Tuple[Optional[str], str]:
     return None, "No suitable MacPorts clang installation found with version 18 or greater."
 
 def detect_default_clang(clang_name: str) -> Tuple[Optional[str], str]:
+    # Cannot find a path to the 'Clang' compiler, it looks like it is not set in the `$env`
+    # environment variable. Please add the path to the compiler by adding a new environment
+    # variable 'LLVM'. For example 'LLVM=C:/Program Files/LLVM/bin'.
     clang_path = shutil.which(clang_name)
     if not clang_path:
         return None, f"Cannot find '{clang_name}'. Please make sure it is available in your PATH."
@@ -114,15 +121,31 @@ def detect_default_clang(clang_name: str) -> Tuple[Optional[str], str]:
     else:
         return None, f"Could not determine the version of '{clang_name}'."
 
-def detect_cxx_compiler(name: str) -> str:
+def detect_c_compiler(name: str) -> str:
     if name not in ["clang", "clang++"]:
-        raise ValueError("Currently only 'clang' and 'clang++' are supported as compiler names.")
+        raise ValueError("Only 'clang' and 'clang++' compilers are currently supported.")
     
-    default_clang_path, default_message = detect_default_clang(name)
+    default_clang_path, default_message = detect_default_clang("clang")
     if default_clang_path:
         return default_clang_path
     elif detect_os() == "MacOSX":
-        macports_clang_path, macports_message = detect_macports_clang(name)
+        macports_clang_path, macports_message = detect_macports_clang("clang")
+        if macports_clang_path:
+            return macports_clang_path
+        else:
+            raise RuntimeError(f"An error occurred: {default_message} {macports_message}")
+    else:
+        raise RuntimeError(f"An error occurred: {default_message}")
+
+def detect_cxx_compiler(name: str) -> str:
+    if name not in ["clang", "clang++"]:
+        raise ValueError("Only 'clang' and 'clang++' compilers are currently supported.")
+    
+    default_clang_path, default_message = detect_default_clang("clang++")
+    if default_clang_path:
+        return default_clang_path
+    elif detect_os() == "MacOSX":
+        macports_clang_path, macports_message = detect_macports_clang("clang++")
         if macports_clang_path:
             return macports_clang_path
         else:
@@ -141,13 +164,13 @@ def detect_cxx_compiler(name: str) -> str:
 #     print(f"Project root directory is: {project_root}")
     
 #     try:
-#         compiler_path = detect_cxx_compiler("clang")
+#         compiler_path = detect_c_compiler("clang")
 #         print(f"Clang compiler found at: {compiler_path}")
 #     except Exception as e:
 #         print(e)
 
 #     try:
-#         compiler_path = detect_cxx_compiler("clang++")
+#         compiler_path = detect_cxx_compiler("clang")
 #         print(f"Clang++ compiler found at: {compiler_path}")
 #     except Exception as e:
 #         print(e)
