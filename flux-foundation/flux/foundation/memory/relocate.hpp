@@ -1,5 +1,6 @@
 #pragma once
 #include <flux/foundation/memory/detail/constexpr_memcpy.hpp>
+#include <flux/foundation/memory/detail/construct_at.hpp>
 
 namespace flux::fou {
 

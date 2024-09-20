@@ -13,23 +13,16 @@ if(CMAKE_OBJCXX_COMPILER)
     string(APPEND CMAKE_OBJCXX_FLAGS " -fobjc-arc -std=gnu++23")
 endif()
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++23" FLUX_COMPILER_SUPPORTS_CXX23)
-CHECK_CXX_COMPILER_FLAG("-std=c++2b" FLUX_COMPILER_SUPPORTS_CXX2B)
-if(NOT FLUX_COMPILER_SUPPORTS_CXX23 AND NOT FLUX_COMPILER_SUPPORTS_CXX2B)
-    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++23 support. Please use a different C++ compiler.")
-endif()
-
 add_library(flux::project_settings INTERFACE IMPORTED)
 
 target_compile_features(flux::project_settings INTERFACE cxx_std_23)
 
 # Enable output of compile commands during generation. This file will be used by clangd.
-if(NOT DEFINED CMAKE_EXPORT_COMPILE_COMMANDS AND NOT DEFINED ENV{CMAKE_EXPORT_COMPILE_COMMANDS})
-  set(CMAKE_EXPORT_COMPILE_COMMANDS "ON" CACHE BOOL "Enable/Disable output of compile commands during generation.")
-  mark_as_advanced(CMAKE_EXPORT_COMPILE_COMMANDS)
-
-  message(STATUS "CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS}")
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?(C|c)?lang$")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Enable/Disable output of compile commands during generation." FORCE)
+    mark_as_advanced(CMAKE_EXPORT_COMPILE_COMMANDS)
+  
+    message(STATUS "CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS}")
 endif()
 
 # Let CMake know where to find custom modules.
@@ -150,6 +143,7 @@ if(NOT (DEFINED CACHE{FLUX_TARGET_CPU}    AND
         if(NOT CMAKE_SYSTEM_PROCESSOR)
             set(CMAKE_SYSTEM_PROCESSOR ${CMAKE_HOST_SYSTEM_PROCESSOR} CACHE STRING "The target architecture." FORCE)
         endif()
+
         # Get the correct target architecture.
         flux_set_target_architecture(FLUX_TARGET_CPU)
 
@@ -188,8 +182,8 @@ endif()
 macro(flux_requires_vendor _ARG_VENDOR)
     if(NOT FLUX_TARGET_VENDOR STREQUAL ${_ARG_VENDOR})
         get_filename_component(_TMP_BASENAME ${CMAKE_CURRENT_LIST_DIR} NAME)
-        message("The subdirectory '${_TMP_BASENAME}' is ignored because the target OS vendor is set to "
-                "'${FLUX_TARGET_VENDOR}'")
+        message(STATUS "The subdirectory '${_TMP_BASENAME}' is ignored because the target OS\
+                        vendor is set to '${FLUX_TARGET_VENDOR}'")
         unset(_TMP_BASENAME)
         return()
     endif()
@@ -209,10 +203,6 @@ endif()
 #-----------------------------------------------------------------------------------------------------------------------
 
 function(flux_common_app _NAME)
-    if(NOT (FLUX_TARGET_OS STREQUAL "Windows" OR FLUX_TARGET_OS STREQUAL "Linux"))
-        message("Target '${_NAME}' is ignored because the target OS is set to '${FLUX_TARGET_OS}'.")
-        return()
-    endif()
     cmake_parse_arguments(PARSE_ARGV 1         # start at the 1st argument
                           _FLUX_COMMON_APP
                           ""                   # options
@@ -233,10 +223,6 @@ function(flux_common_app _NAME)
 endfunction(flux_common_app)
 
 function(flux_macosx_app _NAME)
-    if(NOT FLUX_TARGET_OS STREQUAL "MacOSX")
-        message("Target '${_NAME}' is ignored because the target OS is set to '${FLUX_TARGET_OS}'.")
-        return()
-    endif()
     cmake_parse_arguments(PARSE_ARGV 1         # start at the 1st argument
                           _FLUX_MACOSX_APP
                           ""                   # options
@@ -276,11 +262,11 @@ endfunction(flux_macosx_app)
 #          <SOURCE|LINK> items...
 #         [<SOURCE|LINK> items...]...]...)
 function(flux_executable _ARG_NAME)
-    cmake_parse_arguments(PARSE_ARGV 1                 # start at the 1st argument
-                      _ARG                             # variable prefix
-                      ""                               # options
-                      ""                               # one   value keywords
-                      "WINDOWS;MACOSX;LINUX;COMMON")   # multi value keywords
+    cmake_parse_arguments(PARSE_ARGV 1                     # start at the 1st argument
+                          _ARG                             # variable prefix
+                          ""                               # options
+                          ""                               # one   value keywords
+                          "WINDOWS;MACOSX;LINUX;COMMON")   # multi value keywords
     if (FLUX_TARGET_OS STREQUAL "MacOSX")
         if (DEFINED _ARG_MACOSX OR DEFINED _ARG_COMMON)
             flux_macosx_app(${_ARG_NAME} ${_ARG_MACOSX} ${_ARG_COMMON})
@@ -359,13 +345,6 @@ function(flux_metal_library _ARG_NAME)
     endif()
 endfunction(flux_metal_library)
 
-# flux_static_library(<name>
-#     <WINDOWS|MACOSX|LINUX|COMMON>
-#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
-#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...
-#     [<WINDOWS|MACOSX|LINUX|COMMON>
-#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
-#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...]...)
 function(_flux_static_library _ARG_NAME)
     cmake_parse_arguments(PARSE_ARGV 1                      # start at the 1st argument
                           _ARG                              # variable prefix
@@ -386,6 +365,13 @@ function(_flux_static_library _ARG_NAME)
     _flux_unit_tests("${_ARG_NAME}" "${_ARG_TEST}")
 endfunction(_flux_static_library)
 
+# flux_static_library(<name>
+#     <WINDOWS|MACOSX|LINUX|COMMON>
+#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
+#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...
+#     [<WINDOWS|MACOSX|LINUX|COMMON>
+#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
+#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...]...)
 function(flux_static_library _ARG_NAME)
     cmake_parse_arguments(PARSE_ARGV 1                     # start at the 1st argument
                           _ARG                             # variable prefix
@@ -413,23 +399,21 @@ function(flux_static_library _ARG_NAME)
     endif()
 endfunction(flux_static_library)
 
-# flux_interface_library(<name>
-#     <WINDOWS|MACOSX|LINUX|COMMON>
-#          <TEST|LINK> items...
-#         [<TEST|LINK> items...]...
-#     [<WINDOWS|MACOSX|LINUX|COMMON>
-#          <TEST|LINK> items...
-#         [<TEST|LINK> items...]...]...)
 function(_flux_interface_library _ARG_NAME)
-    cmake_parse_arguments(PARSE_ARGV 1   # start at the 1st argument
-                          _ARG           # variable prefix
-                          ""             # options
-                          ""             # one   value keywords
-                          "TEST;LINK")   # multi value keywords
+    cmake_parse_arguments(PARSE_ARGV 1           # start at the 1st argument
+                          _ARG                   # variable prefix
+                          ""                     # options
+                          ""                     # one   value keywords
+                          "HEADERS;TEST;LINK")   # multi value keywords
     set(_TARGET "flux_${_ARG_NAME}")
     add_library(${_TARGET} INTERFACE)
     add_library("flux::${_ARG_NAME}" ALIAS ${_TARGET})
     target_include_directories(${_TARGET} INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
+    if(DEFINED _ARG_HEADERS)
+        target_sources(${_TARGET}
+                        INTERFACE FILE_SET headers TYPE HEADERS FILES "${_ARG_HEADERS}")
+        set_target_properties(${_TARGET} PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
+    endif()
     target_link_libraries(${_TARGET}
                           INTERFACE flux::project_settings
                                     "${_ARG_LINK}")
@@ -437,6 +421,13 @@ function(_flux_interface_library _ARG_NAME)
     _flux_unit_tests("${_ARG_NAME}" "${_ARG_TEST}")
 endfunction(_flux_interface_library)
 
+# flux_interface_library(<name>
+#     <WINDOWS|MACOSX|LINUX|COMMON>
+#          <TEST|LINK> items...
+#         [<TEST|LINK> items...]...
+#     [<WINDOWS|MACOSX|LINUX|COMMON>
+#          <TEST|LINK> items...
+#         [<TEST|LINK> items...]...]...)
 function(flux_interface_library _ARG_NAME)
     cmake_parse_arguments(PARSE_ARGV 1                     # start at the 1st argument
                           _ARG                             # variable prefix
@@ -511,24 +502,26 @@ endif()
 
 # The code below changes the CMAKE_<LANG>_FLAGS and CMAKE_<LANG>_LINK_FLAGS variables. It does this for a good reason.
 # Don't do this in normal code. Instead add the necessary compile/linker flags to flux::project_settings.
-# if (FLUX_TARGET_OS STREQUAL "MacOSX")
-#     option(FLUX_ENABLE_BITCODE "Enable Bitcode generation." YES)
+if(FLUX_TARGET_OS STREQUAL "MacOSX")
+    # FIXME:
+    #   `ld: -mllvm and -bitcode_bundle (Xcode setting ENABLE_BITCODE=YES) cannot be used together`
+    option(FLUX_ENABLE_BITCODE "Enable Bitcode generation." NO)
 
-#     if(FLUX_ENABLE_BITCODE)
-#         string(APPEND CMAKE_C_FLAGS       " -fembed-bitcode")
-#         string(APPEND CMAKE_CXX_FLAGS     " -fembed-bitcode")
-#         string(APPEND CMAKE_OBJC_FLAGS    " -fembed-bitcode")
-#         string(APPEND CMAKE_OBJCXX_FLAGS  " -fembed-bitcode")
+    if(FLUX_ENABLE_BITCODE)
+        string(APPEND CMAKE_C_FLAGS       " -fembed-bitcode")
+        string(APPEND CMAKE_CXX_FLAGS     " -fembed-bitcode")
+        string(APPEND CMAKE_OBJC_FLAGS    " -fembed-bitcode")
+        string(APPEND CMAKE_OBJCXX_FLAGS  " -fembed-bitcode")
 
-#         # The flag '-headerpad_max_install_names' should not be used with '-fembed-bitcode'. CMake always adds
-#         # '-headerpad_max_install_names' flag. There's no appernt way to disable this flag otherwise.
-#         #   See: https://github.com/Kitware/CMake/blob/master/Modules/Platform/Darwin.cmake
-#         string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_C_LINK_FLAGS      ${CMAKE_C_LINK_FLAGS})
-#         string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_CXX_LINK_FLAGS    ${CMAKE_CXX_LINK_FLAGS})
-#         string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_OBJC_LINK_FLAGS   ${CMAKE_C_LINK_FLAGS})
-#         string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_OBJCXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS})
-#     endif()
-# endif()
+        # The flag '-headerpad_max_install_names' should not be used with '-fembed-bitcode'. CMake always adds
+        # '-headerpad_max_install_names' flag. There's no appernt way to disable this flag otherwise.
+        #   See: https://github.com/Kitware/CMake/blob/master/Modules/Platform/Darwin.cmake
+        string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_C_LINK_FLAGS      ${CMAKE_C_LINK_FLAGS})
+        string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_CXX_LINK_FLAGS    ${CMAKE_CXX_LINK_FLAGS})
+        string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_OBJC_LINK_FLAGS   ${CMAKE_C_LINK_FLAGS})
+        string(REPLACE "-Wl,-headerpad_max_install_names" "" CMAKE_OBJCXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS})
+    endif()
+endif()
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Link time optimization.
@@ -617,12 +610,6 @@ target_compile_options(flux::project_settings INTERFACE
     # Check calls to printf and scanf, etc., to make sure that the arguments supplied have types appropriate to the
     # format string.
     -Wformat=2)
-
-# if(FLUX_COMPILER_SUPPORTS_CXX2B)
-#     target_compile_options(flux::project_settings INTERFACE
-#         # I would not have expected `-pedantic` to warn me about constructs that are ill-formed in a previous standard.
-#         -Wno-pre-c++2b-compat)
-# endif()
 
 option(FLUX_WARNINGS_AS_ERRORS "Treat compiler warnings as errors." YES)
 

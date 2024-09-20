@@ -1,4 +1,5 @@
 #pragma once
+#include <flux/io.hpp>
 #include <flux/foundation/memory/detail/fixed_stack.hpp>
 
 namespace flux::fou::detail {

@@ -4,6 +4,7 @@
 
 #include <flux/meta/compare.hpp>
 #include <flux/meta/concepts.hpp>
+#include <flux/meta/datasizeof.hpp>
 #include <flux/meta/declval.hpp>
 #include <flux/meta/integer.hpp>
 #include <flux/meta/prvalue.hpp>

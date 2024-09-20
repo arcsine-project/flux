@@ -1,4 +1,7 @@
 #pragma once
+#include <flux/config.hpp>
+#include <flux/io.hpp>
+
 #include <flux/foundation/memory/allocator_traits.hpp>
 
 #include <mutex>

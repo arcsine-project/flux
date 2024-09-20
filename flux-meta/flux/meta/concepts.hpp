@@ -168,34 +168,39 @@ concept underlying_constructible = ::std::conjunction_v<is_constructible_from<T,
 template <typename T, typename... Args>
 concept only_constructible = requires(Args&&... args) { new T{::std::forward<Args>(args)...}; };
 
+// clang-format off
+
 // This concept ensures that uninitialized algorithms can construct an object
 // at the address pointed-to by the iterator, which requires an lvalue.
 template <typename Iterator>
-concept nothrow_input_iterator =
-        input_iterator<Iterator> and is_lvalue_reference_v<iter_ref_t<Iterator>> and
-        same_as<remove_cvref_t<iter_ref_t<Iterator>>, remove_ref_t<iter_ref_t<Iterator>>> and
-        same_as<remove_cvref_t<iter_ref_t<Iterator>>, iter_value_t<Iterator>>;
+concept nothrow_input_iterator = input_iterator        <Iterator>
+                             and is_lvalue_reference_v <iter_ref_t<Iterator>>
+                             and same_as<remove_cvref_t<iter_ref_t<Iterator>>, remove_ref_t<iter_ref_t<Iterator>>>
+                             and same_as<remove_cvref_t<iter_ref_t<Iterator>>, iter_value_t<Iterator>>;
 
 template <typename Sentinel, typename Iterator>
 concept nothrow_sentinel_for = sentinel_for<Sentinel, Iterator>;
 
 template <typename Iterator>
-concept nothrow_forward_iterator =
-        nothrow_input_iterator<Iterator> and forward_iterator<Iterator> and
-        nothrow_sentinel_for<Iterator, Iterator>;
+concept nothrow_forward_iterator = nothrow_input_iterator<Iterator>
+                               and forward_iterator      <Iterator>
+                               and nothrow_sentinel_for  <Iterator, Iterator>;
 
 template <typename Range>
-concept nothrow_input_range = range<Range> and nothrow_input_iterator<iterator_t<Range>> and
-                              nothrow_sentinel_for<sentinel_t<Range>, iterator_t<Range>>;
+concept nothrow_input_range = range                 <Range>
+                          and nothrow_input_iterator<iterator_t<Range>>
+                          and nothrow_sentinel_for  <sentinel_t<Range>, iterator_t<Range>>;
 
 template <typename Range>
 concept nothrow_forward_range =
         nothrow_input_range<Range> and nothrow_forward_iterator<iterator_t<Range>>;
 
 template <typename NoThrowForwardIterator>
-concept use_memset_value_construct = contiguous_iterator<NoThrowForwardIterator> and
-                                     trivially_copyable<iter_value_t<NoThrowForwardIterator>> and
-                                     not_volatile<remove_ref_t<iter_ref_t<NoThrowForwardIterator>>>;
+concept use_memset_value_construct = contiguous_iterator<NoThrowForwardIterator>
+                                 and trivially_copyable <iter_value_t<NoThrowForwardIterator>>
+                                 and not_volatile       <remove_ref_t<iter_ref_t<NoThrowForwardIterator>>>;
+
+// clang-format on
 
 template <typename T>
 concept has_to_address = requires(T const p) { p.to_address(); } or

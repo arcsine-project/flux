@@ -1,4 +1,5 @@
 #pragma once
+#include <flux/foundation/memory/allocator_storage.hpp>
 #include <flux/foundation/memory/threading.hpp>
 
 namespace flux::fou {

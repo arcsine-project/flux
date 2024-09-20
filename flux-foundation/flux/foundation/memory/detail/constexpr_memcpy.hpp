@@ -1,5 +1,5 @@
 #pragma once
-#include <flux/meta/datasizeof.hpp>
+#include <flux/meta.hpp>
 
 namespace flux::fou::detail {
 
