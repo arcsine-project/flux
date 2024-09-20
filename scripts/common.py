@@ -28,7 +28,7 @@ def apple_minimum_supported_version(os: str) -> Optional[int]:
 def xcrun_get_sdk_path(os: str) -> str:
     try:
         # Run the xcrun command with the specified SDK and capture the output
-        result = subprocess.run(["xcrun", "--sdk", os, "--show-sdk-path"], 
+        result = subprocess.run(["xcrun", "--sdk", os, "--show-sdk-path"],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         # Check if the command was successful
         if result.returncode == 0:
@@ -104,11 +104,11 @@ def detect_default_clang(clang_name: str) -> Tuple[Optional[str], str]:
     clang_path = shutil.which(clang_name)
     if not clang_path:
         return None, f"Cannot find '{clang_name}'. Please make sure it is available in your PATH."
-    
+
     result = subprocess.run([clang_name, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         return None, f"Failed to run '{clang_name} --version'."
-    
+
     version_info = result.stdout
     # Extract version number using regex
     version_match = re.search(r"clang version (\d+)\.(\d+)\.(\d+)", version_info)
@@ -124,7 +124,7 @@ def detect_default_clang(clang_name: str) -> Tuple[Optional[str], str]:
 def detect_c_compiler(name: str) -> str:
     if name not in ["clang", "clang++"]:
         raise ValueError("Only 'clang' and 'clang++' compilers are currently supported.")
-    
+
     default_clang_path, default_message = detect_default_clang("clang")
     if default_clang_path:
         return default_clang_path
@@ -140,7 +140,7 @@ def detect_c_compiler(name: str) -> str:
 def detect_cxx_compiler(name: str) -> str:
     if name not in ["clang", "clang++"]:
         raise ValueError("Only 'clang' and 'clang++' compilers are currently supported.")
-    
+
     default_clang_path, default_message = detect_default_clang("clang++")
     if default_clang_path:
         return default_clang_path

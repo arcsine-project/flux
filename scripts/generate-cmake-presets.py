@@ -135,6 +135,7 @@ class CMakePresetsGenerator:
     ]
 }}""")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="CMakePresetsGenerator",
                                      description="Script for generating CMakePresets file.")
