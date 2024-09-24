@@ -21,11 +21,11 @@ add_library(flux::project_settings INTERFACE IMPORTED)
 target_compile_features(flux::project_settings INTERFACE cxx_std_23)
 
 # Enable output of compile commands during generation. This file will be used by clangd.
-if(NOT DEFINED CMAKE_EXPORT_COMPILE_COMMANDS AND NOT DEFINED ENV{CMAKE_EXPORT_COMPILE_COMMANDS})
-  set(CMAKE_EXPORT_COMPILE_COMMANDS "ON" CACHE BOOL "Enable/Disable output of compile commands during generation.")
-  mark_as_advanced(CMAKE_EXPORT_COMPILE_COMMANDS)
-
-  message(STATUS "CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS}")
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?(C|c)?lang$")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Enable/Disable output of compile commands during generation." FORCE)
+    mark_as_advanced(CMAKE_EXPORT_COMPILE_COMMANDS)
+  
+    message(STATUS "CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS}")
 endif()
 
 # Let CMake know where to find custom modules.
@@ -147,33 +147,17 @@ if(NOT (DEFINED CACHE{FLUX_TARGET_CPU}    AND
         DEFINED CACHE{FLUX_TARGET_OS}     AND
         DEFINED CACHE{FLUX_TARGET_VENDOR} AND
         DEFINED CACHE{FLUX_TARGET_GRAPHICS}))
-    if(WIN32)
-        if(NOT CMAKE_SYSTEM_VERSION)
-            set(CMAKE_SYSTEM_VERSION ${CMAKE_HOST_SYSTEM_VERSION} CACHE STRING "The version of the target platform." FORCE)
-        endif()
+    # Make sure that FLUX_GRAPHICS_API variable was specified.
+    if(NOT FLUX_GRAPHICS_API)
+        message(FATAL_ERROR "The required variable FLUX_GRAPHICS_API does not exist in CMake cache.\
+                             Please make sure you specify this variable during configuration.\
+                             FLUX_GRAPHICS_API is responsible for which Graphics API to use.")
+    endif()
 
-        if(NOT CMAKE_SYSTEM_PROCESSOR)
-            set(CMAKE_SYSTEM_PROCESSOR ${CMAKE_HOST_SYSTEM_PROCESSOR} CACHE STRING "The target architecture." FORCE)
-        endif()
-        # Get the correct target architecture.
-        flux_set_target_architecture(FLUX_TARGET_CPU)
-
-        set(FLUX_TARGET_VENDOR   Microsoft        CACHE STRING "[READONLY] The target vendor."       FORCE)
-        set(FLUX_TARGET_OS       Windows          CACHE STRING "[READONLY] The current platform."    FORCE)
-        set(FLUX_TARGET_GRAPHICS ${FLUX_GRAPHICS} CACHE STRING "[READONLY] The target graphics api." FORCE)
-
-        flux_add_graphics_definitions(${FLUX_TARGET_GRAPHICS})
-
-        if(FLUX_TARGET_GRAPHICS STREQUAL "OpenGL")
-            set(FLUX_API_VERSION_MAJOR 4 CACHE STRING "[READONLY] The target graphics api version major." FORCE)
-            set(FLUX_API_VERSION_MINOR 6 CACHE STRING "[READONLY] The target graphics api version minor." FORCE)
-            add_definitions("-DFLUX_OPENGL_VERSION_MAJOR=${FLUX_API_VERSION_MAJOR}")
-            add_definitions("-DFLUX_OPENGL_VERSION_MINOR=${FLUX_API_VERSION_MINOR}")
-        endif()
-    elseif(APPLE)
+    if(APPLE)
         if(NOT DEFINED CMAKE_OSX_SYSROOT)
-            message(FATAL_ERROR "The required variable CMAKE_OSX_SYSROOT does not exist in CMake cache.\n"
-                                "CMAKE_OSX_SYSROOT holds the path to the SDK.")
+            message(FATAL_ERROR "The required variable CMAKE_OSX_SYSROOT does not exist in CMake cache.\
+                                 CMAKE_OSX_SYSROOT holds the path to the SDK.")
         endif()
 
         list(LENGTH CMAKE_OSX_ARCHITECTURES _ARCH_COUNT)
@@ -188,20 +172,16 @@ if(NOT (DEFINED CACHE{FLUX_TARGET_CPU}    AND
             # Get the correct target architecture.
             flux_set_target_architecture(FLUX_TARGET_CPU)
 
-            set(FLUX_TARGET_VENDOR   Apple            CACHE STRING "[READONLY] The target vendor."       FORCE)
-            set(FLUX_TARGET_OS       MacOSX           CACHE STRING "[READONLY] The current platform."    FORCE)
-            set(FLUX_TARGET_GRAPHICS ${FLUX_GRAPHICS} CACHE STRING "[READONLY] The target graphics api." FORCE)
+            set(FLUX_TARGET_VENDOR   Apple                CACHE STRING "[READONLY] The target vendor."       FORCE)
+            set(FLUX_TARGET_OS       MacOSX               CACHE STRING "[READONLY] The current platform."    FORCE)
+            set(FLUX_TARGET_GRAPHICS ${FLUX_GRAPHICS_API} CACHE STRING "[READONLY] The target graphics api." FORCE)
 
+            # Set the Graphics API for the engine itself.
             flux_add_graphics_definitions(${FLUX_TARGET_GRAPHICS})
-
-            if(FLUX_TARGET_GRAPHICS STREQUAL "OpenGL")
-                set(FLUX_API_VERSION_MAJOR 4 CACHE STRING "[READONLY] The target graphics api version major." FORCE)
-                set(FLUX_APIL_VERSION_MINOR 1 CACHE STRING "[READONLY] The target graphics api version minor." FORCE)
-                add_definitions("-DFLUX_OPENGL_VERSION_MAJOR=${FLUX_API_VERSION_MAJOR}")
-                add_definitions("-DFLUX_OPENGL_VERSION_MINOR=${FLUX_API_VERSION_MINOR}")
-            endif()
+        else()
+            message(FATAL_ERROR "Detected invalid path to the SDK in CMAKE_OSX_SYSROOT variable.")
         endif()
-    elseif(UNIX)
+    else()
         if(NOT CMAKE_SYSTEM_VERSION)
             set(CMAKE_SYSTEM_VERSION ${CMAKE_HOST_SYSTEM_VERSION} CACHE STRING "The version of the target platform." FORCE)
         endif()
@@ -209,21 +189,35 @@ if(NOT (DEFINED CACHE{FLUX_TARGET_CPU}    AND
         if(NOT CMAKE_SYSTEM_PROCESSOR)
             set(CMAKE_SYSTEM_PROCESSOR ${CMAKE_HOST_SYSTEM_PROCESSOR} CACHE STRING "The target architecture." FORCE)
         endif()
+
         # Get the correct target architecture.
         flux_set_target_architecture(FLUX_TARGET_CPU)
 
-        set(FLUX_TARGET_VENDOR   "Linus Torvalds" CACHE STRING "[READONLY] The target vendor."       FORCE)
-        set(FLUX_TARGET_OS       Linux            CACHE STRING "[READONLY] The current platform."    FORCE)
-        set(FLUX_TARGET_GRAPHICS ${FLUX_GRAPHICS} CACHE STRING "[READONLY] The target graphics api." FORCE)
-
-        flux_add_graphics_definitions(${FLUX_TARGET_GRAPHICS})
-
-        if(FLUX_TARGET_GRAPHICS STREQUAL "OpenGL")
-            set(FLUX_API_VERSION_MAJOR 4 CACHE STRING "[READONLY] The target graphics api version major." FORCE)
-            set(FLUX_API_VERSION_MINOR 6 CACHE STRING "[READONLY] The target graphics api version minor." FORCE)
-            add_definitions("-DFLUX_OPENGL_VERSION_MAJOR=${FLUX_API_VERSION_MAJOR}")
-            add_definitions("-DFLUX_OPENGL_VERSION_MINOR=${FLUX_API_VERSION_MINOR}")
+        if(WIN32)
+            set(FLUX_TARGET_VENDOR   Microsoft            CACHE STRING "[READONLY] The target vendor."       FORCE)
+            set(FLUX_TARGET_OS       Windows              CACHE STRING "[READONLY] The current platform."    FORCE)
+            set(FLUX_TARGET_GRAPHICS ${FLUX_GRAPHICS_API} CACHE STRING "[READONLY] The target graphics api." FORCE)
+        elseif(UNIX)
+            set(FLUX_TARGET_VENDOR   Unknown              CACHE STRING "[READONLY] The target vendor."       FORCE)
+            set(FLUX_TARGET_OS       Linux                CACHE STRING "[READONLY] The current platform."    FORCE)
+            set(FLUX_TARGET_GRAPHICS ${FLUX_GRAPHICS_API} CACHE STRING "[READONLY] The target graphics api." FORCE)
+        else()
+            message(FATAL_ERROR "Detected unsupported operating system.\
+                                 Flux Engine is currently only available for Windows, Linux, and MacOS.")
         endif()
+
+        # Set the Graphics API for the engine itself.
+        flux_add_graphics_definitions(${FLUX_TARGET_GRAPHICS})
+    endif()
+
+    if(FLUX_TARGET_GRAPHICS STREQUAL "OpenGL")
+        set(FLUX_GAPI_VERSION_MAJOR 4 CACHE STRING "[READONLY] The target graphics api version major." FORCE)
+        set(FLUX_GAPI_VERSION_MINOR 6 CACHE STRING "[READONLY] The target graphics api version minor." FORCE)
+        add_definitions("-DFLUX_OPENGL_VERSION_MAJOR=${FLUX_GAPI_VERSION_MAJOR}")
+        add_definitions("-DFLUX_OPENGL_VERSION_MINOR=${FLUX_GAPI_VERSION_MINOR}")
+    else()
+        message(FATAL_ERROR "Detected unsupported Graphics API: ${FLUX_TARGET_GRAPHICS}.\
+                             Flux Engine currently only supports OpenGL.")
     endif()
 endif()
 
@@ -234,8 +228,8 @@ endif()
 macro(flux_requires_vendor _ARG_VENDOR)
     if(NOT FLUX_TARGET_VENDOR STREQUAL ${_ARG_VENDOR})
         get_filename_component(_TMP_BASENAME ${CMAKE_CURRENT_LIST_DIR} NAME)
-        message("The subdirectory '${_TMP_BASENAME}' is ignored because the target OS vendor is set to "
-                "'${FLUX_TARGET_VENDOR}'")
+        message(STATUS "The subdirectory '${_TMP_BASENAME}' is ignored because the target OS\
+                        vendor is set to '${FLUX_TARGET_VENDOR}'")
         unset(_TMP_BASENAME)
         return()
     endif()
@@ -255,10 +249,6 @@ endif()
 #-----------------------------------------------------------------------------------------------------------------------
 
 function(flux_common_app _NAME)
-    if(NOT (FLUX_TARGET_OS STREQUAL "Windows" OR FLUX_TARGET_OS STREQUAL "Linux"))
-        message("Target '${_NAME}' is ignored because the target OS is set to '${FLUX_TARGET_OS}'.")
-        return()
-    endif()
     cmake_parse_arguments(PARSE_ARGV 1         # start at the 1st argument
                           _FLUX_COMMON_APP
                           ""                   # options
@@ -279,10 +269,6 @@ function(flux_common_app _NAME)
 endfunction(flux_common_app)
 
 function(flux_macosx_app _NAME)
-    if(NOT FLUX_TARGET_OS STREQUAL "MacOSX")
-        message("Target '${_NAME}' is ignored because the target OS is set to '${FLUX_TARGET_OS}'.")
-        return()
-    endif()
     cmake_parse_arguments(PARSE_ARGV 1         # start at the 1st argument
                           _FLUX_MACOSX_APP
                           ""                   # options
@@ -306,7 +292,7 @@ function(flux_macosx_app _NAME)
                           XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
     target_sources(flux_${_NAME} PRIVATE "${_FLUX_MACOSX_APP_SOURCE}")
     target_link_libraries(flux_${_NAME} PRIVATE flux::project_settings)
-    target_link_libraries(flux_${_NAME} PRIVATE " -framework AppKit")
+    target_link_libraries(flux_${_NAME} PRIVATE "-framework AppKit")
     if(_FLUX_MACOSX_APP_LINK)
         target_link_libraries(flux_${_NAME} PRIVATE "${_FLUX_MACOSX_APP_LINK}")
     endif()
@@ -322,11 +308,11 @@ endfunction(flux_macosx_app)
 #          <SOURCE|LINK> items...
 #         [<SOURCE|LINK> items...]...]...)
 function(flux_executable _ARG_NAME)
-    cmake_parse_arguments(PARSE_ARGV 1                 # start at the 1st argument
-                      _ARG                             # variable prefix
-                      ""                               # options
-                      ""                               # one   value keywords
-                      "WINDOWS;MACOSX;LINUX;COMMON")   # multi value keywords
+    cmake_parse_arguments(PARSE_ARGV 1                     # start at the 1st argument
+                          _ARG                             # variable prefix
+                          ""                               # options
+                          ""                               # one   value keywords
+                          "WINDOWS;MACOSX;LINUX;COMMON")   # multi value keywords
     if (FLUX_TARGET_OS STREQUAL "MacOSX")
         if (DEFINED _ARG_MACOSX OR DEFINED _ARG_COMMON)
             flux_macosx_app(${_ARG_NAME} ${_ARG_MACOSX} ${_ARG_COMMON})
@@ -405,13 +391,6 @@ function(flux_metal_library _ARG_NAME)
     endif()
 endfunction(flux_metal_library)
 
-# flux_static_library(<name>
-#     <WINDOWS|MACOSX|LINUX|COMMON>
-#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
-#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...
-#     [<WINDOWS|MACOSX|LINUX|COMMON>
-#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
-#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...]...)
 function(_flux_static_library _ARG_NAME)
     cmake_parse_arguments(PARSE_ARGV 1                      # start at the 1st argument
                           _ARG                              # variable prefix
@@ -434,6 +413,13 @@ function(_flux_static_library _ARG_NAME)
     _flux_unit_tests("${_ARG_NAME}" "${_ARG_TEST}")
 endfunction(_flux_static_library)
 
+# flux_static_library(<name>
+#     <WINDOWS|MACOSX|LINUX|COMMON>
+#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
+#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...
+#     [<WINDOWS|MACOSX|LINUX|COMMON>
+#          <SOURCE|TEST|LINK|INCLUDE_DIR> items...
+#         [<SOURCE|TEST|LINK|INCLUDE_DIR> items...]...]...)
 function(flux_static_library _ARG_NAME)
     cmake_parse_arguments(PARSE_ARGV 1                     # start at the 1st argument
                           _ARG                             # variable prefix
@@ -461,23 +447,21 @@ function(flux_static_library _ARG_NAME)
     endif()
 endfunction(flux_static_library)
 
-# flux_interface_library(<name>
-#     <WINDOWS|MACOSX|LINUX|COMMON>
-#          <TEST|LINK> items...
-#         [<TEST|LINK> items...]...
-#     [<WINDOWS|MACOSX|LINUX|COMMON>
-#          <TEST|LINK> items...
-#         [<TEST|LINK> items...]...]...)
 function(_flux_interface_library _ARG_NAME)
-    cmake_parse_arguments(PARSE_ARGV 1   # start at the 1st argument
-                          _ARG           # variable prefix
-                          ""             # options
-                          ""             # one   value keywords
-                          "TEST;LINK")   # multi value keywords
+    cmake_parse_arguments(PARSE_ARGV 1           # start at the 1st argument
+                          _ARG                   # variable prefix
+                          ""                     # options
+                          ""                     # one   value keywords
+                          "HEADERS;TEST;LINK")   # multi value keywords
     set(_TARGET "flux_${_ARG_NAME}")
     add_library(${_TARGET} INTERFACE)
     add_library("flux::${_ARG_NAME}" ALIAS ${_TARGET})
     target_include_directories(${_TARGET} INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
+    if(DEFINED _ARG_HEADERS)
+        target_sources(${_TARGET}
+                        INTERFACE FILE_SET headers TYPE HEADERS FILES "${_ARG_HEADERS}")
+        set_target_properties(${_TARGET} PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
+    endif()
     target_link_libraries(${_TARGET}
                           INTERFACE flux::project_settings
                                     "${_ARG_LINK}")
@@ -485,6 +469,13 @@ function(_flux_interface_library _ARG_NAME)
     _flux_unit_tests("${_ARG_NAME}" "${_ARG_TEST}")
 endfunction(_flux_interface_library)
 
+# flux_interface_library(<name>
+#     <WINDOWS|MACOSX|LINUX|COMMON>
+#          <TEST|LINK> items...
+#         [<TEST|LINK> items...]...
+#     [<WINDOWS|MACOSX|LINUX|COMMON>
+#          <TEST|LINK> items...
+#         [<TEST|LINK> items...]...]...)
 function(flux_interface_library _ARG_NAME)
     cmake_parse_arguments(PARSE_ARGV 1                     # start at the 1st argument
                           _ARG                             # variable prefix
@@ -559,8 +550,10 @@ endif()
 
 # The code below changes the CMAKE_<LANG>_FLAGS and CMAKE_<LANG>_LINK_FLAGS variables. It does this for a good reason.
 # Don't do this in normal code. Instead add the necessary compile/linker flags to flux::project_settings.
-if (FLUX_TARGET_OS STREQUAL "MacOSX")
-    option(FLUX_ENABLE_BITCODE "Enable Bitcode generation." YES)
+if(FLUX_TARGET_OS STREQUAL "MacOSX")
+    # FIXME:
+    #   `ld: -mllvm and -bitcode_bundle (Xcode setting ENABLE_BITCODE=YES) cannot be used together`
+    option(FLUX_ENABLE_BITCODE "Enable Bitcode generation." NO)
 
     if(FLUX_ENABLE_BITCODE)
         string(APPEND CMAKE_C_FLAGS       " -fembed-bitcode")

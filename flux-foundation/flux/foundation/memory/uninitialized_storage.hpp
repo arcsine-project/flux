@@ -1,4 +1,5 @@
 #pragma once
+#include <flux/meta.hpp>
 
 namespace flux::fou {
 

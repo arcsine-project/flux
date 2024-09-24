@@ -1,3 +1,4 @@
+// IWYU pragma: private, include "../config.hpp"
 #pragma once
 
 #if __has_attribute(__no_sanitize__)

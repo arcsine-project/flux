@@ -1,4 +1,6 @@
+// IWYU pragma: private, include "../utility.hpp"
 #pragma once
+#include <flux/foundation/utility/advance.hpp>
 
 namespace flux::fou {
 

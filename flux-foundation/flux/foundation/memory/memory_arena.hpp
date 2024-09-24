@@ -1,5 +1,6 @@
 #pragma once
 #include <flux/foundation/memory/allocator_traits.hpp>
+#include <flux/foundation/memory/default_allocator.hpp>
 #include <flux/foundation/memory/detail/construct_at.hpp>
 #include <flux/foundation/memory/detail/debug_helpers.hpp>
 #include <flux/foundation/memory/memory_block.hpp>
@@ -27,10 +28,9 @@ struct [[nodiscard]] memory_block_stack final {
     }
 
     constexpr void push(memory_block block) noexcept {
-        FLUX_ASSERT(block.size >= sizeof(Node));
+        FLUX_ASSERT(block.size >= sizeof(block_node));
         FLUX_ASSERT(is_aligned(block.memory, max_alignment));
-        auto* next = construct_at(static_cast<Node*>(block.memory), head_, block.size - offset());
-        head_      = next;
+        head_ = construct_at(static_cast<block_node*>(block.memory), head_, block.size - offset());
     }
 
     constexpr memory_block pop() noexcept {
@@ -80,16 +80,17 @@ struct [[nodiscard]] memory_block_stack final {
 
     static constexpr ::std::size_t offset() noexcept {
         // Node size rounded up to the next multiple of max_alignment.
-        return (sizeof(Node) / max_alignment + (sizeof(Node) % max_alignment != 0)) * max_alignment;
+        return (sizeof(block_node) / max_alignment + (sizeof(block_node) % max_alignment != 0)) *
+               max_alignment;
     }
 
 private:
-    struct [[nodiscard]] Node final {
-        Node*         prev = nullptr;
+    struct [[nodiscard]] block_node final {
+        block_node*   prev = nullptr;
         ::std::size_t size = 0u;
     };
 
-    Node* head_ = nullptr;
+    block_node* head_ = nullptr;
 };
 
 // clang-format off

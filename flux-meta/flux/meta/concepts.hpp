@@ -1,4 +1,9 @@
+// IWYU pragma: private, include "../meta.hpp"
 #pragma once
+#include <flux/meta/declval.hpp>
+#include <flux/meta/type_traits.hpp>
+
+#include <cstddef>
 
 namespace flux::meta {
 
@@ -177,34 +182,39 @@ concept underlying_constructible = ::std::conjunction_v<is_constructible_from<T,
 template <typename T, typename... Args>
 concept only_constructible = requires(Args&&... args) { new T{::std::forward<Args>(args)...}; };
 
+// clang-format off
+
 // This concept ensures that uninitialized algorithms can construct an object
 // at the address pointed-to by the iterator, which requires an lvalue.
 template <typename Iterator>
-concept nothrow_input_iterator =
-        input_iterator<Iterator> and is_lvalue_reference_v<iter_ref_t<Iterator>> and
-        same_as<remove_cvref_t<iter_ref_t<Iterator>>, remove_ref_t<iter_ref_t<Iterator>>> and
-        same_as<remove_cvref_t<iter_ref_t<Iterator>>, iter_value_t<Iterator>>;
+concept nothrow_input_iterator = input_iterator        <Iterator>
+                             and is_lvalue_reference_v <iter_ref_t<Iterator>>
+                             and same_as<remove_cvref_t<iter_ref_t<Iterator>>, remove_ref_t<iter_ref_t<Iterator>>>
+                             and same_as<remove_cvref_t<iter_ref_t<Iterator>>, iter_value_t<Iterator>>;
 
 template <typename Sentinel, typename Iterator>
 concept nothrow_sentinel_for = sentinel_for<Sentinel, Iterator>;
 
 template <typename Iterator>
-concept nothrow_forward_iterator =
-        nothrow_input_iterator<Iterator> and forward_iterator<Iterator> and
-        nothrow_sentinel_for<Iterator, Iterator>;
+concept nothrow_forward_iterator = nothrow_input_iterator<Iterator>
+                               and forward_iterator      <Iterator>
+                               and nothrow_sentinel_for  <Iterator, Iterator>;
 
 template <typename Range>
-concept nothrow_input_range = range<Range> and nothrow_input_iterator<iterator_t<Range>> and
-                              nothrow_sentinel_for<sentinel_t<Range>, iterator_t<Range>>;
+concept nothrow_input_range = range                 <Range>
+                          and nothrow_input_iterator<iterator_t<Range>>
+                          and nothrow_sentinel_for  <sentinel_t<Range>, iterator_t<Range>>;
 
 template <typename Range>
 concept nothrow_forward_range =
         nothrow_input_range<Range> and nothrow_forward_iterator<iterator_t<Range>>;
 
 template <typename NoThrowForwardIterator>
-concept use_memset_value_construct = contiguous_iterator<NoThrowForwardIterator> and
-                                     trivially_copyable<iter_value_t<NoThrowForwardIterator>> and
-                                     not_volatile<remove_ref_t<iter_ref_t<NoThrowForwardIterator>>>;
+concept use_memset_value_construct = contiguous_iterator<NoThrowForwardIterator>
+                                 and trivially_copyable <iter_value_t<NoThrowForwardIterator>>
+                                 and not_volatile       <remove_ref_t<iter_ref_t<NoThrowForwardIterator>>>;
+
+// clang-format on
 
 template <typename T>
 concept has_to_address = requires(T const p) { p.to_address(); } or
@@ -219,6 +229,45 @@ concept iter_move_constructible =
 template <typename OutputIterator, typename InputIterator>
 concept iter_copy_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_ref_t<InputIterator>>;
+
+// clang-format off
+template <typename InputIterator, typename OutputIterator>
+struct [[nodiscard]] is_memcpyable final {
+    using T = iter_value_t<OutputIterator>;
+    using U = decltype(::std::ranges::iter_move(declval<InputIterator&&>()));
+
+    static constexpr bool value = same_as<T, remove_ref_t<U>> and trivially_copyable<T>;
+};
+
+template <typename InputIterator, typename OutputIterator>
+inline constexpr bool is_memcpyable_v = is_memcpyable<InputIterator, OutputIterator>::value;
+
+template <typename T>
+concept addressable = pointer<T> or has_to_address<T> or has_arrow_operator<T>;
+
+template <typename InputIterator, typename OutputIterator>
+concept contiguous = contiguous_iterator<InputIterator >
+                 and contiguous_iterator<OutputIterator>;
+
+template <typename InputIterator, typename OutputIterator>
+concept memcpyable = contiguous     <InputIterator, OutputIterator>
+                 and addressable    <OutputIterator>
+                 and is_memcpyable_v<InputIterator, OutputIterator>
+                 and not_volatile   <InputIterator, OutputIterator>;
+
+template <typename T>
+concept relocatable = move_constructible<T> and destructible<T>;
+
+template <typename T>
+concept trivially_relocatable = trivially_copyable<T>;
+// clang-format on
+
+template <typename T, typename U>
+concept same_trivially_relocatable =
+        not_volatile<T, U> and is_same_uncvref_v<T, U> and trivially_relocatable<remove_cvref_t<U>>;
+
+template <typename Src, typename Dest>
+concept relocatable_from = nothrow_constructible<Dest, Src> and nothrow_destructible<Src>;
 
 template <typename Range, typename T>
 concept container_compatible_range = input_range<Range> and convertible_to<range_ref_t<Range>, T>;

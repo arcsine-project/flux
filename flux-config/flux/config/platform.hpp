@@ -1,3 +1,4 @@
+// IWYU pragma: private, include "../config.hpp"
 #pragma once
 
 #define FLUX_TARGET_APPLE   (0)
