@@ -1,4 +1,6 @@
 #pragma once
+#include <flux/meta.hpp>
+
 #if defined(__cpp_lib_to_address) && __cpp_lib_to_address >= 201711L
 #    include <memory>
 #endif

@@ -1,3 +1,4 @@
+// IWYU pragma: private, include "../utility.hpp"
 #pragma once
 
 namespace flux::fou {

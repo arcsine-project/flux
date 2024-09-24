@@ -1,5 +1,6 @@
 #pragma once
 #include <flux/foundation/memory/detail/fixed_stack.hpp>
+#include <flux/foundation/memory/memory_pool.hpp>
 
 namespace flux::fou {
 

@@ -16,6 +16,9 @@ flux_executable(playground
     LINUX
         SOURCE
             "playground.cpp"
+    MACOSX
+        SOURCE
+            "playground.cpp"
 )
 
 # code: language="CMake" insertSpaces=true tabSize=4

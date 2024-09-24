@@ -198,23 +198,21 @@ set(GLAD_SOURCES_DIR "${GLAD_ROOT}")
 add_subdirectory("${GLAD_SOURCES_DIR}/cmake" cmake)
 
 # This target is OpenGL-specific.
-if(FLUX_TARGET_GRAPHICS STREQUAL "OpenGL")
+if(FLUX_GRAPHICS_API STREQUAL "OpenGL")
     set(GLAD_SPEC    gl)
     set(GLAD_PROFILE core)
-    set(GLAD_ARGS    MX API ${GLAD_SPEC}:${GLAD_PROFILE}=${FLUX_API_VERSION_MAJOR}.${FLUX_API_VERSION_MINOR})
+    set(GLAD_ARGS    MX API ${GLAD_SPEC}:${GLAD_PROFILE}=${FLUX_GAPI_VERSION_MAJOR}.${FLUX_GAPI_VERSION_MINOR})
 # This target is Vulkan-specific.
-elseif(FLUX_TARGET_GRAPHICS STREQUAL "Vulkan")
+elseif(FLUX_GRAPHICS_API STREQUAL "Vulkan")
     set(GLAD_SPEC    vulkan)
     set(GLAD_PROFILE core)
-    set(GLAD_ARGS    API ${GLAD_SPEC}=${FLUX_API_VERSION_MAJOR}.${FLUX_API_VERSION_MINOR})
+    set(GLAD_ARGS    API ${GLAD_SPEC}=${FLUX_GAPI_VERSION_MAJOR}.${FLUX_GAPI_VERSION_MINOR})
+else()
+    message(STATUS "Glad2 with ${FLUX_GRAPHICS_API} backend is not supported. Skipping...")
 endif()
 
-if(FLUX_TARGET_GRAPHICS STREQUAL "Metal")
-    message(STATUS "Glad2 with Metal backend is not supported. Skipping...")
-else()
-    glad_add_library(glad STATIC REPRODUCIBLE LOCATION ${CMAKE_INSTALL_PREFIX} ${GLAD_ARGS})
-    install(TARGETS glad)
-endif()
+glad_add_library(glad STATIC REPRODUCIBLE LOCATION ${CMAKE_INSTALL_PREFIX} ${GLAD_ARGS})
+install(TARGETS glad)
 ]])
 message(STATUS "GLAD project generation successfully finished.")
 
@@ -226,9 +224,9 @@ execute_process(COMMAND ${CMAKE_COMMAND}
                         -S${CMAKE_BINARY_DIR}/generated/external/glad2
                         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/output/external/glad
                         -DGLAD_ROOT=${CMAKE_SOURCE_DIR}/external/glad
-                        -DFLUX_TARGET_GRAPHICS=${FLUX_TARGET_GRAPHICS}
-                        -DFLUX_API_VERSION_MAJOR=${FLUX_API_VERSION_MAJOR}
-                        -DFLUX_API_VERSION_MINOR=${FLUX_API_VERSION_MINOR}
+                        -DFLUX_GRAPHICS_API=${FLUX_GRAPHICS_API}
+                        -DFLUX_GAPI_VERSION_MAJOR=${FLUX_GAPI_VERSION_MAJOR}
+                        -DFLUX_GAPI_VERSION_MINOR=${FLUX_GAPI_VERSION_MINOR}
                         ${FLUX_CONFIG_ARGUMENTS}
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 RESULT_VARIABLE COMMAND_RESULT

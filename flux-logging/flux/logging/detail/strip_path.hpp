@@ -1,5 +1,5 @@
+// IWYU pragma: private, include "../logger.hpp"
 #pragma once
-#include <cstdint>
 
 namespace flux::log::detail {
 

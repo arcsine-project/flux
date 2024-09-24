@@ -1,4 +1,5 @@
 #pragma once
+#include <flux/foundation/memory/memory_arena.hpp>
 #include <flux/foundation/memory/memory_pool_type.hpp>
 
 namespace flux::fou {

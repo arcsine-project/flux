@@ -1,4 +1,6 @@
 #pragma once
+#include <flux/foundation/utility.hpp>
+
 #include <flux/foundation/memory/construct.hpp>
 #include <flux/foundation/memory/relocate.hpp>
 

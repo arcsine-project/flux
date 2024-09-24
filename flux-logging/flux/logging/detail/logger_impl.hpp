@@ -3,7 +3,10 @@
 //  Maybe add multithreading support as well. But at this stage, let it be as it is.
 // TODO:
 //  Revisit it.
+
+// IWYU pragma: private, include "../logger.hpp"
 #pragma once
+#include <flux/io.hpp>
 #include <flux/logging/detail/source_location.hpp>
 
 #include <string_view>

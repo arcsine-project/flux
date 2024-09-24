@@ -1,5 +1,6 @@
 #pragma once
-#include <functional>
+#include <flux/config.hpp>
+#include <flux/io.hpp>
 
 namespace flux::fou::detail {
 

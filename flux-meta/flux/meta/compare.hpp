@@ -1,3 +1,4 @@
+// IWYU pragma: private, include "../meta.hpp"
 #pragma once
 
 namespace flux::meta {

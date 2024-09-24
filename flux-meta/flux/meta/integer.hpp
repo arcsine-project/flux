@@ -1,3 +1,4 @@
+// IWYU pragma: private, include "../meta.hpp"
 #pragma once
 #include <flux/meta/type_traits.hpp>
 

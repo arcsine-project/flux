@@ -1,5 +1,8 @@
 #=======================================================================================================================
 
+# MacOS files
+.DS_Store
+
 # The clangd compilation database. This is a soft link, it's generated automatically during the build.
 compile_commands.json
 
@@ -94,6 +97,9 @@ fabric.properties
 
 # Prerequisites
 *.d
+
+# Python
+__pycache__
 
 # Compiled Object files
 *.slo

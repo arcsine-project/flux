@@ -1,7 +1,7 @@
 #pragma once
-#include <cstddef>
-#include <cstdint>
-#include <flux/meta/integer.hpp>
+#include <flux/meta.hpp>
+
+#include <cstdint> // IWYU pragma: export
 
 namespace flux::fou {
 

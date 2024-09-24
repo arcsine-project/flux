@@ -1,5 +1,7 @@
 #pragma once
 
+// IWYU pragma: begin_exports
+
 #include <flux/foundation/memory/align.hpp>
 #include <flux/foundation/memory/allocator_storage.hpp>
 #include <flux/foundation/memory/allocator_traits.hpp>
@@ -16,3 +18,5 @@
 #include <flux/foundation/memory/temporary_allocator.hpp>
 #include <flux/foundation/memory/uninitialized_algorithms.hpp>
 #include <flux/foundation/memory/uninitialized_storage.hpp>
+
+// IWYU pragma: end_exports
