@@ -1,4 +1,3 @@
-// IWYU pragma: private, include "../utility.hpp"
 #pragma once
 #if defined(_MSC_VER) && !defined(FLUX_CLANG)
 #    include <cstdlib>

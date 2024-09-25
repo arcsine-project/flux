@@ -1,4 +1,3 @@
-// IWYU pragma: private, include "../config.hpp"
 #pragma once
 
 // Whether or not the allocation size will be checked.

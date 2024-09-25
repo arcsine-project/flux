@@ -1,4 +1,3 @@
-// IWYU pragma: private, include "../io.hpp"
 #pragma once
 #include <fast_io.h>
 

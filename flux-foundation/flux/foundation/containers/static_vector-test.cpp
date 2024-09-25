@@ -223,6 +223,8 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
                 return v;
             }();
             constexpr fou::static_vector<nontrivial_int, 3> v2{v1};
+            // constexpr fou::static_vector<nontrivial_int, 3> v1{1, 2};
+            // constexpr fou::static_vector<nontrivial_int, 3> v2{1, 2};
             STATIC_REQUIRE(v1 == v2);
         }
         {

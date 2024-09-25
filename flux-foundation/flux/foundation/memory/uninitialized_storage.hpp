@@ -1,4 +1,5 @@
 #pragma once
+#include <flux/foundation/utility/addressof.hpp>
 #include <flux/meta.hpp>
 
 namespace flux::fou {
@@ -66,11 +67,11 @@ namespace flux {
 // clang-format off
 template <meta::reference Reference, typename T>
 constexpr Reference get(fou::uninitialized_storage<T>& storage) noexcept {
-    return *storage.data();
+    return storage.value;
 }
 template <meta::reference Reference, typename T>
 constexpr Reference get(fou::uninitialized_storage<T> const& storage) noexcept {
-    return *storage.data();
+    return storage.value;
 }
 template <meta::reference Reference, typename T>
 constexpr T&& get(T&& value) noexcept {

@@ -1,4 +1,7 @@
 #pragma once
+#include <flux/foundation/memory/detail/low_level_allocator_adapter.hpp>
+
+#include <flux/foundation/memory/allocation_result.hpp>
 #include <flux/foundation/memory/allocator_storage.hpp>
 #include <flux/foundation/memory/threading.hpp>
 

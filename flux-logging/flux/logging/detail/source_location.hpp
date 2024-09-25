@@ -1,5 +1,3 @@
-// IWYU pragma: private, include "../logger.hpp"
-// IWYU pragma: friend "detail/.*"
 #pragma once
 #include <flux/logging/detail/strip_path.hpp>
 

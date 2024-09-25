@@ -1,6 +1,26 @@
 #pragma once
+#include <flux/foundation/containers/from_range.hpp>
+#include <flux/foundation/memory/uninitialized_algorithms.hpp>
+#include <flux/foundation/memory/uninitialized_storage.hpp>
+#include <flux/foundation/utility/iterator_adapter.hpp>
+#include <flux/meta.hpp>
 
 namespace flux::fou {
+
+template <typename Iter1, typename Sent1, typename Iter2, typename Sent2>
+inline constexpr bool equal_impl(Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2);
+// {
+//   int counter = 2;
+//   while (first1 != last1 && first2 != last2) {
+//     if (*first1 != *first2)
+//       return false;
+//     if (0 == counter) return true;
+//     --counter;
+//     ++first1;
+//     ++first2;
+//   }
+//   return first1 == last1 && first2 == last2;
+// }
 
 template <meta::object T, ::std::size_t Capacity>
 class [[nodiscard, clang::trivial_abi]] static_vector final {
@@ -456,6 +476,8 @@ public:
             }
         }
 
+        //return equal_impl(std::__unwrap_iter(begin()), std::__unwrap_iter(end()), std::__unwrap_iter(other.begin()), std::__unwrap_iter(other.end()));
+        // return equal_impl(begin(), end(), other.begin(), other.end());
         return ::std::ranges::equal(*this, other);
     }
 

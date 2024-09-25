@@ -1,4 +1,6 @@
 #pragma once
+#include <flux/config.hpp>
+
 #include <flux/foundation/memory/allocation_result.hpp>
 #include <flux/foundation/memory/debugging.hpp>
 #include <flux/foundation/utility/terminate.hpp>

@@ -2,8 +2,6 @@
 
 // IWYU pragma: begin_exports
 
-#include <flux/foundation/utility/detail/to_address.hpp>
-
 #include <flux/foundation/utility/addressof.hpp>
 #include <flux/foundation/utility/advance.hpp>
 #include <flux/foundation/utility/distance.hpp>

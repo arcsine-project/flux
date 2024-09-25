@@ -1,4 +1,6 @@
 #pragma once
+#include <flux/config.hpp>
+#include <flux/meta.hpp>
 #if !__has_builtin(__builtin_bit_cast) && __cpp_lib_bit_cast >= 201806L
 #    include <bit>
 #endif
