@@ -545,6 +545,19 @@ if(FLUX_TARGET_OS STREQUAL "Windows" AND CMAKE_CXX_COMPILER_ID MATCHES "(C|c)lan
 endif()
 
 #-----------------------------------------------------------------------------------------------------------------------
+# Forced use of libc++.
+#-----------------------------------------------------------------------------------------------------------------------
+
+# The code below changes the CMAKE_<LANG>_FLAGS variable.
+# Don't do this in normal code. Instead add the necessary compile/linker flags to flux::project_settings.
+if(FLUX_FORCE_USE_LIBCXX)
+    string(APPEND CMAKE_C_FLAGS       " -stdlib=libc++")
+    string(APPEND CMAKE_CXX_FLAGS     " -stdlib=libc++")
+    string(APPEND CMAKE_OBJC_FLAGS    " -stdlib=libc++")
+    string(APPEND CMAKE_OBJCXX_FLAGS  " -stdlib=libc++")
+endif()
+
+#-----------------------------------------------------------------------------------------------------------------------
 # Getting LLVM Bitcode.
 #-----------------------------------------------------------------------------------------------------------------------
 

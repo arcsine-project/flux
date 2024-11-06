@@ -99,7 +99,7 @@ public:
     constexpr static_vector(static_vector&& other) noexcept : static_vector() {
         if constexpr (meta::relocatable<T>) {
             ranges::uninitialized_relocate_no_overlap(other.begin(), other.end(), begin());
-            size_ = ::std::exchange(other.size_, 0z);
+            size_ = ::std::exchange(other.size_, 0zu);
         } else {
             ranges::uninitialized_move(other.begin(), other.end(), begin());
             size_ = other.size_;
@@ -126,7 +126,7 @@ public:
         clear();
         if constexpr (meta::relocatable<T>) {
             ranges::uninitialized_relocate_no_overlap(other.begin(), other.end(), begin());
-            size_ = ::std::exchange(other.size_, 0u);
+            size_ = ::std::exchange(other.size_, 0zu);
         } else {
             ranges::uninitialized_move(other.begin(), other.end(), begin());
             size_ = other.size_;
