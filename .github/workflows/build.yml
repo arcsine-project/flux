@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v4
 
       - name: Set Environment Variables
         uses: ./.github/actions/setvars
@@ -30,7 +30,7 @@ jobs:
           varFilePath: ./.github/variables/versions.env
 
       - name: Set up Python
-        uses: actions/setup-python@latest
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - run: pip install -U Jinja2
@@ -76,10 +76,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@latest
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - run: pip install -U Jinja2
