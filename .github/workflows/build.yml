@@ -38,8 +38,8 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
         with:
-          cmakeVersion: $CMAKE_VERSION
-          ninjaVersion: $NINJA_VERSION
+          cmakeVersion: latestrc # use the latest release candidate
+          ninjaVersion: latest   # use the latest release
 
       - name: Install Clang
         run: |
@@ -87,13 +87,13 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
         with:
-          cmakeVersion: 3.26.1
-          ninjaVersion: 1.11.1
+          cmakeVersion: latestrc # use the latest release candidate
+          ninjaVersion: latest   # use the latest release
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: ${{matrix.compiler.version}}
+          version: ${{ matrix.compiler.version }}
 
       - name: Configure
         env:
