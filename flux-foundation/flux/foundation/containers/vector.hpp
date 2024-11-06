@@ -97,22 +97,24 @@ public:
     // clang-format off
     constexpr vector() noexcept = default;
 
-    constexpr explicit vector(allocator_type const& allocator) noexcept
-            : allocator_{allocator} {}
+    // constexpr explicit vector(allocator_type const& allocator) noexcept
+    //         : allocator_{allocator} {}
 
-    constexpr explicit vector(size_type             count,
-                              allocator_type const& allocator = allocator_type()) noexcept
-            : allocator_{allocator} {
+    // constexpr explicit vector(size_type             count,
+    //                           allocator_type const& allocator = allocator_type()) noexcept
+
+    constexpr explicit vector(size_type count) noexcept {
         if (count > 0) {
             vallocate(count);
             end_ = ranges::uninitialized_default_construct_n(begin_, difference_type(count));
         }
     }
 
-    constexpr vector(size_type             count,
-                     value_type     const& value,
-                     allocator_type const& allocator = allocator_type()) noexcept
-            : allocator_{allocator} {
+    // constexpr vector(size_type             count,
+    //                  value_type     const& value,
+    //                  allocator_type const& allocator = allocator_type()) noexcept
+
+    constexpr vector(size_type count, value_type const& value) noexcept {
         if (count > 0) {
             vallocate(count);
             end_ = ranges::uninitialized_fill_n(begin_, difference_type(count), value);
