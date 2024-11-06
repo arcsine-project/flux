@@ -27,7 +27,7 @@ jobs:
       - name: Set Environment Variables
         uses: ./.github/actions/setvars
         with:
-          varFilePath: ./.github/variables/versions.env
+          envFilePath: ./.github/variables/versions.env
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,15 +38,15 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
         with:
-          cmakeVersion: latestrc # use the latest release candidate
-          ninjaVersion: latest   # use the latest release
+          cmakeVersion: ${{ env.CMAKE_VERSION }}
+          ninjaVersion: ${{ env.NINJA_VERSION }}
 
       - name: Install Clang
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-$COMPILER_VERSION main"
+          sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{ env.COMPILER_VERSION }} main"
           sudo apt update
-          sudo apt install -y ${{ matrix.compiler.cc }}-$COMPILER_VERSION libc++-$COMPILER_VERSION-dev libc++abi-$COMPILER_VERSION-dev
+          sudo apt install -y ${{ matrix.compiler.cc }}-${{ env.COMPILER_VERSION }} libc++-${{ env.COMPILER_VERSION }}-dev libc++abi-${{ env.COMPILER_VERSION }}-dev
 
       - name: Install dependencies
         run: |
