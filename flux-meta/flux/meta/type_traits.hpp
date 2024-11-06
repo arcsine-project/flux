@@ -11,6 +11,7 @@ using ::std::apply;
 using ::std::bool_constant;
 using ::std::contiguous_iterator_tag;
 using ::std::decay_t;
+using ::std::enable_if_t;
 using ::std::false_type;
 using ::std::iter_value_t;
 using ::std::random_access_iterator_tag;
@@ -21,6 +22,7 @@ using ::std::true_type;
 using ::std::tuple;
 using ::std::void_t;
 using ::std::ranges::borrowed_iterator_t;
+using ::std::ranges::iter_move;
 using ::std::ranges::iterator_t;
 using ::std::ranges::range_value_t;
 using ::std::ranges::sentinel_t;
@@ -131,8 +133,7 @@ struct [[nodiscard]] is_trivially_equality_comparable_impl : false_type {};
 template <typename T>
 struct [[nodiscard]] is_trivially_equality_comparable_impl<T, T>
 #if __has_builtin(__is_trivially_equality_comparable)
-        : ::std::bool_constant<__is_trivially_equality_comparable(T) and
-                             is_equality_comparable_v<T, T>>
+        : bool_constant<__is_trivially_equality_comparable(T) and is_equality_comparable_v<T, T>>
 #else
         : ::std::is_integral<T>
 #endif
@@ -144,9 +145,9 @@ struct [[nodiscard]] is_trivially_equality_comparable_impl<T*, T*> : true_type {
 
 template <typename T, typename U>
 struct [[nodiscard]] is_trivially_equality_comparable_impl<T*, U*>
-        : ::std::bool_constant<is_equality_comparable_v<T*, U*> and
-                             (::std::is_same_v<remove_cv_t<T>, remove_cv_t<U>> or
-                              ::std::is_void_v<T> or ::std::is_void_v<U>)> {};
+        : bool_constant<is_equality_comparable_v<T*, U*> and
+                       (::std::is_same_v<remove_cv_t<T>, remove_cv_t<U>> or
+                        ::std::is_void_v<T> or ::std::is_void_v<U>)> {};
 
 template <typename T, typename U>
 using is_trivially_equality_comparable =
@@ -192,7 +193,7 @@ inline constexpr bool is_same_uncvref_v = is_same_uncvref<T, U>::value;
 
 template <typename T, typename U>
 struct [[nodiscard]] is_constructible_from
-        : ::std::bool_constant<::std::is_nothrow_destructible_v<T> && ::std::is_constructible_v<T, U>> {};
+        : bool_constant<::std::is_nothrow_destructible_v<T> && ::std::is_constructible_v<T, U>> {};
 
 template <typename T>
 struct [[nodiscard]] template_parameter;
@@ -212,6 +213,35 @@ template <typename Unique>
 struct non_trivial_if<true, Unique> {
   constexpr non_trivial_if() noexcept {}
 };
+
+#if __has_builtin(__is_trivially_relocatable) && (defined(__cpp_impl_trivially_relocatable) ||     \
+                                                  (!defined(__clang__) && !defined(__APPLE__)))
+template <typename T, typename = void>
+struct is_trivially_relocatable : bool_constant<__is_trivially_relocatable(T)> {};
+#else
+template <typename T, typename = void>
+struct is_trivially_relocatable : bool_constant<__is_trivially_copyable(T)> {};
+
+template <typename T>
+struct is_trivially_relocatable<T, enable_if_t<__is_same(T, typename T::trivially_relocatable__)>>
+        : true_type {};
+#endif
+
+template <typename T>
+inline constexpr bool is_trivially_relocatable_v = is_trivially_relocatable<T>::value;
+
+template <typename InputIterator, typename OutputIterator>
+struct [[nodiscard]] is_memcpyable final {
+    using T = iter_value_t<OutputIterator>;
+    using U = decltype(iter_move(declval<InputIterator&&>()));
+
+    static constexpr bool value = __is_same(T, remove_ref_t<U>)
+                              and is_trivially_relocatable_v<T>
+                              and not __is_volatile(T) and not __is_volatile(U);
+};
+
+template <typename InputIterator, typename OutputIterator>
+inline constexpr bool is_memcpyable_v = is_memcpyable<InputIterator, OutputIterator>::value;
 // clang-format on
 
 } // namespace flux::meta

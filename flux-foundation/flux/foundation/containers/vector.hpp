@@ -1,6 +1,11 @@
 #pragma once
 
+#include <flux/foundation/memory.hpp>
+#include <flux/foundation/utility.hpp>
+#include <flux/meta.hpp>
+
 #include <flux/foundation/containers/detail/temp_value.hpp>
+#include <flux/foundation/containers/from_range.hpp>
 
 // TODO:
 //  * Implement wrap_iter for vector;
@@ -14,6 +19,11 @@ namespace flux::fou {
 namespace detail {
 
 // clang-format off
+template <typename T, typename Allocator>
+concept memcpy_relocatable = meta::trivially_relocatable<T>
+                         and meta::trivially_move_constructible<Allocator>
+                         and meta::trivially_destructible<Allocator>;
+
 // template <typename T>
 // struct vector_impl final {
 //     T* begin   = nullptr;
@@ -67,6 +77,12 @@ public:
     using reverse_iterator       = ::std::reverse_iterator<iterator>;
     using const_reverse_iterator = ::std::reverse_iterator<const_iterator>;
 
+    // Vector doesn't contain any self-references, so it's trivially relocatable if its members are.
+    using trivially_relocatable__ =
+            meta::condition<meta::trivially_relocatable<pointer> and
+                                    meta::trivially_relocatable<allocator_type>,
+                            vector, void>;
+
     static_assert(meta::non_cv<T>, "T must not be cv-qualified");
     static_assert(not is_stateful_allocator<allocator_type>::value,
                   "Allocator must not be stateful");
@@ -78,23 +94,31 @@ public:
     FLUX_NO_UNIQUE_ADDRESS pointer        end_cap_   = {};
     FLUX_NO_UNIQUE_ADDRESS allocator_type allocator_ = {};
 
-    constexpr vector() noexcept {
-        // Do nothing.
-        }
+    // clang-format off
+    constexpr vector() noexcept = default;
 
-    constexpr explicit vector(size_type count) noexcept {
+    constexpr explicit vector(allocator_type const& allocator) noexcept
+            : allocator_{allocator} {}
+
+    constexpr explicit vector(size_type             count,
+                              allocator_type const& allocator = allocator_type()) noexcept
+            : allocator_{allocator} {
         if (count > 0) {
             vallocate(count);
             end_ = ranges::uninitialized_default_construct_n(begin_, difference_type(count));
         }
     }
 
-    constexpr vector(size_type count, T const& value) noexcept {
+    constexpr vector(size_type             count,
+                     value_type     const& value,
+                     allocator_type const& allocator = allocator_type()) noexcept
+            : allocator_{allocator} {
         if (count > 0) {
             vallocate(count);
             end_ = ranges::uninitialized_fill_n(begin_, difference_type(count), value);
         }
     }
+    // clang-format on
 
     template <meta::input_iterator InputIterator>
     constexpr vector(InputIterator first, InputIterator last) noexcept {
@@ -155,6 +179,7 @@ public:
     }
 
     constexpr void assign(size_type count, value_type const& value) noexcept {
+        // TODO: revisit me.
         if (capacity() < count) {
             clear_and_reserve_geometric(count);
         } else { // Just clear the vector if we have enough capacity.
@@ -181,6 +206,7 @@ public:
     // }
 
     constexpr void resize(size_type count, value_type const& value) noexcept {
+        // TODO: revisit me.
         // Reinitialize the new members if we are enlarging.
         if (size() < count) {
             if (capacity() < count) {
@@ -219,12 +245,12 @@ public:
 
         return iterator{emplace_reallocate(whereptr, ::std::forward<Args>(args)...)};
     }
-    
-    template <typename... Args>
-    constexpr reference emplace_back(Args&&... args) noexcept {
-        FLUX_ASSERT(size() < capacity(), "emplace_back(args...) called on a full static_vector");
-        return construct_one_at_end(::std::forward<Args>(args)...);
-    }
+
+    // clang-format off
+    // template <typename... Args>
+    // constexpr reference emplace_back(Args&&... args) noexcept {
+    // }
+    // clang-format on
 
     // Capacity
     [[nodiscard]] static constexpr size_type max_size() noexcept {
@@ -340,21 +366,18 @@ public:
 
 private:
     constexpr void vallocate(size_type capacity) noexcept {
-        FLUX_ASSERT(capacity != 0, "vallocate(capacity) called with zero capacity");
-        // clang-format off
-        auto allocation = allocate_at_least(allocator_, capacity);
-        end_            = begin_ = allocation.ptr;
-        end_cap_        = begin_ + allocation.count;
-        // clang-format on
+        FLUX_ASSERT(0 != capacity, "vallocate(capacity) called with zero capacity");
+        auto [ptr, count] = allocate_at_least(allocator_, capacity);
+        begin_            = ptr;
+        end_              = ptr;
+        end_cap_          = begin_ + count;
     }
 
     constexpr void vreallocate(size_type capacity) noexcept {
-        FLUX_ASSERT(capacity != 0, "vreallocate(capacity) called with zero capacity");
-        auto old_begin = begin_;
-        auto old_end   = end_;
-
-        [[maybe_unused]] auto const old_capacity = static_cast<size_type>(end_cap_ - begin_);
-        [[maybe_unused]] auto const old_size     = static_cast<size_type>(end_ - begin_);
+        FLUX_ASSERT(0 != capacity, "vreallocate(capacity) called with zero capacity");
+        auto       old_begin    = begin_;
+        auto       old_end      = end_;
+        auto const old_capacity = static_cast<size_type>(end_cap_ - begin_);
 
         // clang-format off
         auto    [new_begin, new_capacity] = allocate_at_least(allocator_, capacity);
@@ -371,7 +394,6 @@ private:
             destroy_range(old_begin, old_end);
         }
         // clang-format on
-        FLUX_ASSERT(new_begin + old_size == new_end, "vreallocate(capacity) failed to move memory");
         allocator_traits::deallocate(allocator_, old_begin, old_capacity);
         begin_   = new_begin;
         end_     = new_end;
@@ -380,18 +402,17 @@ private:
 
     template <typename... Args>
     constexpr pointer emplace_reallocate(pointer const position, Args&&... args) noexcept {
-        // Reallocate and insert by perfectly forwarding `args` at `position`.
-        FLUX_ASSERT(end_ == end_cap_, "emplace_reallocate(position, args) called on a full vector");
+        FLUX_ASSERT(end_ == end_cap_,
+                    "emplace_reallocate(position, args) called with unused capacity available");
         auto       old_begin       = begin_;
         auto       old_end         = end_;
-        auto const old_size        = static_cast<size_type>(end_ - begin_);
+        auto const old_capacity    = static_cast<size_type>(end_cap_ - begin_);
         auto const position_offset = static_cast<size_type>(position - begin_);
 
         // clang-format off
-        auto const new_size            = old_size + 1;
+        auto const new_size            = size() + 1;
         auto [new_begin, new_capacity] =
                 allocate_at_least(allocator_, detail::grow_twice(new_size));
-        // clang-format on
         construct_in_place(new_begin + position_offset, ::std::forward<Args>(args)...);
 
         if (position == end_) { // at back, provide strong guarantee
@@ -405,13 +426,12 @@ private:
                 destroy_range(old_begin, old_end);
             }
         } else { // provide basic guarantee
-            // clang-format off
-            ranges::uninitialized_relocate_no_overlap(old_begin, old_end, new_begin);
-            ranges::uninitialized_relocate_no_overlap(position , old_end,
+            ranges::uninitialized_relocate_no_overlap(old_begin, position, new_begin);
+            ranges::uninitialized_relocate_no_overlap(position , old_end ,
                                                       new_begin + position_offset + 1);
-            // clang-format on
         }
-        allocator_traits::deallocate(allocator_, old_begin, capacity());
+        // clang-format on
+        allocator_traits::deallocate(allocator_, old_begin, old_capacity);
         begin_   = new_begin;
         end_     = new_begin + new_size;
         end_cap_ = new_begin + new_capacity;

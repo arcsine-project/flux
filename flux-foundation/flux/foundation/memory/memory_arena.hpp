@@ -435,28 +435,28 @@ make_block_allocator(::std::size_t block_size, Args&&... args) {
 // clang-format on
 
 namespace literals {
-constexpr ::std::size_t operator"" _KiB(unsigned long long value) noexcept {
-    return ::std::size_t(value * 1024);
+constexpr auto operator"" _KiB(unsigned long long value) noexcept {
+    return static_cast<::std::size_t>(value * 1024);
 }
 
-constexpr ::std::size_t operator"" _KB(unsigned long long value) noexcept {
-    return ::std::size_t(value * 1000);
+constexpr auto operator"" _KB(unsigned long long value) noexcept {
+    return static_cast<::std::size_t>(value * 1000);
 }
 
-constexpr ::std::size_t operator"" _MiB(unsigned long long value) noexcept {
-    return ::std::size_t(value * 1024 * 1024);
+constexpr auto operator"" _MiB(unsigned long long value) noexcept {
+    return static_cast<::std::size_t>(value * 1024 * 1024);
 }
 
-constexpr ::std::size_t operator"" _MB(unsigned long long value) noexcept {
-    return ::std::size_t(value * 1000 * 1000);
+constexpr auto operator"" _MB(unsigned long long value) noexcept {
+    return static_cast<::std::size_t>(value * 1000 * 1000);
 }
 
-constexpr ::std::size_t operator"" _GiB(unsigned long long value) noexcept {
-    return ::std::size_t(value * 1024 * 1024 * 1024);
+constexpr auto operator"" _GiB(unsigned long long value) noexcept {
+    return static_cast<::std::size_t>(value * 1024 * 1024 * 1024);
 }
 
-constexpr ::std::size_t operator"" _GB(unsigned long long value) noexcept {
-    return ::std::size_t(value * 1000 * 1000 * 1000);
+constexpr auto operator"" _GB(unsigned long long value) noexcept {
+    return static_cast<::std::size_t>(value * 1000 * 1000 * 1000);
 }
 } // namespace literals
 

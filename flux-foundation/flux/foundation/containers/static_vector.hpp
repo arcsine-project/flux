@@ -7,21 +7,6 @@
 
 namespace flux::fou {
 
-template <typename Iter1, typename Sent1, typename Iter2, typename Sent2>
-inline constexpr bool equal_impl(Iter1 first1, Sent1 last1, Iter2 first2, Sent2 last2);
-// {
-//   int counter = 2;
-//   while (first1 != last1 && first2 != last2) {
-//     if (*first1 != *first2)
-//       return false;
-//     if (0 == counter) return true;
-//     --counter;
-//     ++first1;
-//     ++first2;
-//   }
-//   return first1 == last1 && first2 == last2;
-// }
-
 template <meta::object T, ::std::size_t Capacity>
 class [[nodiscard, clang::trivial_abi]] static_vector final {
     using uninitialized_storage = optional_uninitialized_storage<T>;
@@ -289,7 +274,7 @@ public:
 
         if consteval {
             // Do the move.
-            auto erase_last = ::std::move(move_first, move_last, erase_first);
+            auto erase_last = detail::unsafe_move(move_first, move_last, erase_first);
 
             // Clean out the tail.
             destroy_range(erase_last, move_last);
@@ -476,9 +461,7 @@ public:
             }
         }
 
-        //return equal_impl(std::__unwrap_iter(begin()), std::__unwrap_iter(end()), std::__unwrap_iter(other.begin()), std::__unwrap_iter(other.end()));
-        // return equal_impl(begin(), end(), other.begin(), other.end());
-        return ::std::ranges::equal(*this, other);
+        return detail::unsafe_equal(*this, other);
     }
 
     template <size_type OtherCapacity>

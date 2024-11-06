@@ -30,7 +30,7 @@ union [[nodiscard, clang::trivial_abi]] uninitialized_storage final {
         requires meta::trivially_move_constructible<T>
     = default;
     constexpr uninitialized_storage(uninitialized_storage&& other) noexcept
-            : value{std::move(other.value)} {}
+            : value{::std::move(other.value)} {}
 
     constexpr uninitialized_storage& operator=(uninitialized_storage const&) noexcept
         requires meta::trivially_copy_assignable<T>

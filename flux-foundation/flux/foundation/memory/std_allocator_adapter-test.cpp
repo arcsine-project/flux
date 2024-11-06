@@ -18,23 +18,31 @@ struct [[nodiscard]] typeless_allocator final {
 
 using namespace flux;
 
-static_assert(meta::trivial<fou::std_allocator_adapter<int, fou::default_allocator>>);
-
 // clang-format off
+using std_default_allocator = fou::std_allocator_adapter<int, fou::default_allocator>;
+using std_default_traits    = fou::allocator_traits<std_default_allocator>;
+static_assert(meta::trivially_relocatable<std_default_allocator>);
+static_assert(meta::same_as<std_default_traits::propagate_on_container_copy_assignment, meta::false_type>);
+static_assert(meta::same_as<std_default_traits::propagate_on_container_move_assignment, meta::true_type>);
+static_assert(meta::same_as<std_default_traits::propagate_on_container_swap, meta::false_type>);
+
 using std_stateful_allocator = fou::std_allocator_adapter<int, fou::test_allocator<::std::unordered_map>>;
-static_assert(meta::same_as<std_stateful_allocator::propagate_on_container_copy_assignment, meta::false_type>);
-static_assert(meta::same_as<std_stateful_allocator::propagate_on_container_move_assignment, meta::false_type>);
-static_assert(meta::same_as<std_stateful_allocator::propagate_on_container_swap, meta::false_type>);
+using std_stateful_traits    = fou::allocator_traits<std_stateful_allocator>;
+static_assert(meta::same_as<std_stateful_traits::propagate_on_container_copy_assignment, meta::false_type>);
+static_assert(meta::same_as<std_stateful_traits::propagate_on_container_move_assignment, meta::false_type>);
+static_assert(meta::same_as<std_stateful_traits::propagate_on_container_swap, meta::false_type>);
 
 using std_stateless_allocator = fou::std_allocator_adapter<int, ::std::allocator<int>>;
-static_assert(meta::same_as<std_stateless_allocator::propagate_on_container_copy_assignment, meta::true_type>);
-static_assert(meta::same_as<std_stateless_allocator::propagate_on_container_move_assignment, meta::true_type>);
-static_assert(meta::same_as<std_stateless_allocator::propagate_on_container_swap, meta::false_type>);
+using std_stateless_traits    = fou::allocator_traits<std_stateless_allocator>;
+static_assert(meta::same_as<std_stateless_traits::propagate_on_container_copy_assignment, meta::false_type>);
+static_assert(meta::same_as<std_stateless_traits::propagate_on_container_move_assignment, meta::false_type>);
+static_assert(meta::same_as<std_stateless_traits::propagate_on_container_swap, meta::false_type>);
 
 using std_any_allocator = fou::std_any_allocator<int>;
-static_assert(meta::same_as<std_any_allocator::propagate_on_container_copy_assignment, meta::false_type>);
-static_assert(meta::same_as<std_any_allocator::propagate_on_container_move_assignment, meta::false_type>);
-static_assert(meta::same_as<std_any_allocator::propagate_on_container_swap, meta::false_type>);
+using std_any_traits    = fou::allocator_traits<std_any_allocator>;
+static_assert(meta::same_as<std_any_traits::propagate_on_container_copy_assignment, meta::false_type>);
+static_assert(meta::same_as<std_any_traits::propagate_on_container_move_assignment, meta::false_type>);
+static_assert(meta::same_as<std_any_traits::propagate_on_container_swap, meta::false_type>);
 // clang-format on
 
 TEST_CASE("fou::std_allocator_adapter", "[flux-memory/std_allocator.hpp]") {
@@ -52,8 +60,6 @@ TEST_CASE("fou::std_allocator_adapter", "[flux-memory/std_allocator.hpp]") {
         allocator.deallocate(ptr, sizeof(int));
         CHECK(test.allocated_count() == 0u);
         CHECK(test.deallocated_count() == 1u);
-
-        (void)allocator.select_on_container_copy_construction();
     }
 
     SECTION("test std_stateless_allocator") {

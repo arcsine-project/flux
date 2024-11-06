@@ -7,6 +7,7 @@ namespace trivially_copyable_vector {
 using vector_type = flux::fou::static_vector<int, 5>;
 
 static_assert(not flux::meta::trivial<vector_type>);
+static_assert(flux::meta::trivially_relocatable<vector_type>);
 static_assert(flux::meta::trivially_copyable<vector_type>);
 static_assert(flux::meta::standard_layout<vector_type>);
 
@@ -26,6 +27,7 @@ namespace copyable_or_movable_vector {
 
 using vector_type = flux::fou::static_vector<copyable_or_movable, 5>;
 
+static_assert(not flux::meta::trivially_relocatable<vector_type>);
 static_assert(not flux::meta::trivially_copyable<vector_type>);
 static_assert(flux::meta::copy_assignable<vector_type>);
 static_assert(flux::meta::copy_constructible<vector_type>);
@@ -67,6 +69,7 @@ namespace not_trivially_copyable_vector {
 
 using vector_type = flux::fou::static_vector<nontrivial_int, 5>;
 
+static_assert(not flux::meta::trivially_relocatable<vector_type>);
 static_assert(not flux::meta::trivially_copyable<vector_type>);
 static_assert(not flux::meta::trivially_copy_constructible<vector_type>);
 static_assert(not flux::meta::trivially_copy_assignable<vector_type>);
@@ -223,8 +226,6 @@ TEST_CASE("fou::static_vector", "[flux-containers/static_vector.hpp]") {
                 return v;
             }();
             constexpr fou::static_vector<nontrivial_int, 3> v2{v1};
-            // constexpr fou::static_vector<nontrivial_int, 3> v1{1, 2};
-            // constexpr fou::static_vector<nontrivial_int, 3> v2{1, 2};
             STATIC_REQUIRE(v1 == v2);
         }
         {

@@ -17,6 +17,7 @@ using ::std::default_initializable;
 using ::std::derived_from;
 using ::std::equality_comparable_with;
 using ::std::forward_iterator;
+using ::std::indirectly_comparable;
 using ::std::indirectly_copyable;
 using ::std::indirectly_movable;
 using ::std::input_iterator;
@@ -229,17 +230,25 @@ template <typename OutputIterator, typename InputIterator>
 concept iter_copy_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_ref_t<InputIterator>>;
 
+#if __has_builtin(__is_trivially_relocatable) && (defined(__cpp_impl_trivially_relocatable) ||     \
+                                                  (!defined(__clang__) && !defined(__APPLE__)))
+template <typename T>
+concept trivially_relocatable = __is_trivially_relocatable(T);
+#else
+template <typename T>
+concept trivially_relocatable = is_trivially_relocatable_v<T>;
+#endif
+
 // clang-format off
-template <typename InputIterator, typename OutputIterator>
-struct [[nodiscard]] is_memcpyable final {
-    using T = iter_value_t<OutputIterator>;
-    using U = decltype(::std::ranges::iter_move(declval<InputIterator&&>()));
+template <typename T>
+concept relocatable = move_constructible<T> and destructible<T>;
 
-    static constexpr bool value = same_as<T, remove_ref_t<U>> and trivially_copyable<T>;
-};
+template <typename T, typename U>
+concept same_trivially_relocatable =
+        not_volatile<T, U> and is_same_uncvref_v<T, U> and trivially_relocatable<remove_cvref_t<U>>;
 
-template <typename InputIterator, typename OutputIterator>
-inline constexpr bool is_memcpyable_v = is_memcpyable<InputIterator, OutputIterator>::value;
+template <typename Src, typename Dest>
+concept relocatable_from = nothrow_constructible<Dest, Src> and nothrow_destructible<Src>;
 
 template <typename T>
 concept addressable = pointer<T> or has_to_address<T> or has_arrow_operator<T>;
@@ -251,22 +260,8 @@ concept contiguous = contiguous_iterator<InputIterator >
 template <typename InputIterator, typename OutputIterator>
 concept memcpyable = contiguous     <InputIterator, OutputIterator>
                  and addressable    <OutputIterator>
-                 and is_memcpyable_v<InputIterator, OutputIterator>
-                 and not_volatile   <InputIterator, OutputIterator>;
-
-template <typename T>
-concept relocatable = move_constructible<T> and destructible<T>;
-
-template <typename T>
-concept trivially_relocatable = trivially_copyable<T>;
+                 and is_memcpyable_v<InputIterator, OutputIterator>;
 // clang-format on
-
-template <typename T, typename U>
-concept same_trivially_relocatable =
-        not_volatile<T, U> and is_same_uncvref_v<T, U> and trivially_relocatable<remove_cvref_t<U>>;
-
-template <typename Src, typename Dest>
-concept relocatable_from = nothrow_constructible<Dest, Src> and nothrow_destructible<Src>;
 
 template <typename Range, typename T>
 concept container_compatible_range = input_range<Range> and convertible_to<range_ref_t<Range>, T>;

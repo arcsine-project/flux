@@ -79,15 +79,6 @@ struct [[nodiscard]] low_level_allocator_adapter
         return debug_fill_new(memory, size, max_alignment);
     }
 
-    constexpr auto allocate_node_at_least(size_type size, size_type /* alignment */) noexcept {
-        auto actual_size = FLUX_MEMORY_DEBUG_FENCE_SIZE(size);
-        auto [memory, n] = allocator_type::allocate_at_least(actual_size);
-
-        leak_detector::on_allocate(actual_size);
-
-        return allocation_result{debug_fill_new(memory, n, max_alignment), n};
-    }
-
     constexpr void deallocate_node(void* node, size_type size, size_type alignment) noexcept {
         auto actual_size = FLUX_MEMORY_DEBUG_FENCE_SIZE(size);
         auto memory      = debug_fill_free(node, size, max_alignment);

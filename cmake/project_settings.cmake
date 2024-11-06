@@ -24,7 +24,7 @@ target_compile_features(flux::project_settings INTERFACE cxx_std_23)
 if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?(C|c)?lang$")
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Enable/Disable output of compile commands during generation." FORCE)
     mark_as_advanced(CMAKE_EXPORT_COMPILE_COMMANDS)
-  
+
     message(STATUS "CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS}")
 endif()
 

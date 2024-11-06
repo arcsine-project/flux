@@ -143,12 +143,18 @@ concept has_propagate_on_container_copy_assignment =
     requires {
        typename Allocator::propagate_on_container_copy_assignment;
     };
-    
+
 template <typename Allocator>
 concept has_select_on_container_copy_construction =
     requires(Allocator&& allocator) {
         { allocator.select_on_container_copy_construction() };
     };
+
+template <typename Allocator>
+concept has_is_always_equal =
+    requires {
+        typename Allocator::is_always_equal;
+    } or __is_empty(Allocator);
 
 template <typename Allocator>
 constexpr auto is_stateful() noexcept {
@@ -191,6 +197,9 @@ struct [[nodiscard]] propagation_traits final {
                             meta::true_type, meta::false_type>;
     using propagate_on_container_copy_assignment =
             meta::condition<detail::has_propagate_on_container_copy_assignment<RawAllocator>,
+                            meta::true_type, meta::false_type>;
+    using is_always_equal                        =
+            meta::condition<detail::has_is_always_equal<RawAllocator>,
                             meta::true_type, meta::false_type>;
 
     template <typename Allocator>
@@ -285,6 +294,13 @@ struct [[nodiscard]] allocator_traits final {
 namespace detail {
 
 // clang-format off
+template <typename Allocator>
+concept pocma_relocatable =
+        allocator_traits<Allocator>::is_always_equal::value or
+       (allocator_traits<Allocator>::propagate_on_container_copy_assignment::value and
+        allocator_traits<Allocator>::propagate_on_container_move_assignment::value and
+        allocator_traits<Allocator>::propagate_on_container_swap::value);
+
 template <typename Allocator>
 concept has_try_allocate_node =
     requires(Allocator&& allocator, ::std::size_t size, ::std::size_t align) {
