@@ -4,6 +4,8 @@
 #include <flux/foundation/memory/detail/constexpr_memcpy.hpp>
 #include <flux/foundation/utility/distance.hpp>
 
+#include <functional>
+
 namespace flux::fou {
 
 namespace ranges {

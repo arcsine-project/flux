@@ -1,9 +1,12 @@
 #pragma once
+#include <flux/meta.hpp>
+
 #include <flux/foundation/containers/from_range.hpp>
 #include <flux/foundation/memory/uninitialized_algorithms.hpp>
 #include <flux/foundation/memory/uninitialized_storage.hpp>
 #include <flux/foundation/utility/iterator_adapter.hpp>
-#include <flux/meta.hpp>
+
+#include <utility>
 
 namespace flux::fou {
 
@@ -96,7 +99,7 @@ public:
     constexpr static_vector(static_vector&& other) noexcept : static_vector() {
         if constexpr (meta::relocatable<T>) {
             ranges::uninitialized_relocate_no_overlap(other.begin(), other.end(), begin());
-            size_ = ::std::exchange(other.size_, 0u);
+            size_ = ::std::exchange(other.size_, 0z);
         } else {
             ranges::uninitialized_move(other.begin(), other.end(), begin());
             size_ = other.size_;

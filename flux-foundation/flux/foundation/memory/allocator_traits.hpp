@@ -295,13 +295,6 @@ namespace detail {
 
 // clang-format off
 template <typename Allocator>
-concept pocma_relocatable =
-        allocator_traits<Allocator>::is_always_equal::value or
-       (allocator_traits<Allocator>::propagate_on_container_copy_assignment::value and
-        allocator_traits<Allocator>::propagate_on_container_move_assignment::value and
-        allocator_traits<Allocator>::propagate_on_container_swap::value);
-
-template <typename Allocator>
 concept has_try_allocate_node =
     requires(Allocator&& allocator, ::std::size_t size, ::std::size_t align) {
         { allocator.try_allocate_node(size, align) } noexcept;
