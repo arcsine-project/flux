@@ -71,12 +71,17 @@ jobs:
       matrix:      
         os: [windows-latest]
         compiler:
-          - { cc: clang, cxx: 'clang++', version: 18 }
+          - { cc: clang, cxx: 'clang++' }
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        uses: ./.github/actions/setvars
+        with:
+          envFilePath: ./.github/variables/versions.env
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -87,13 +92,13 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
         with:
-          cmakeVersion: latestrc # use the latest release candidate
-          ninjaVersion: latest   # use the latest release
+          cmakeVersion: ${{ env.CMAKE_VERSION }}
+          ninjaVersion: ${{ env.NINJA_VERSION }}
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: ${{ matrix.compiler.version }}
+          version: ${{ env.COMPILER_VERSION }}
 
       - name: Configure
         env:
