@@ -54,7 +54,7 @@ jobs:
       env:
         CC: ${{ matrix.compiler.cc }}-${{ env.COMPILER_VERSION }}
         CXX: ${{ matrix.compiler.cxx }}-${{ env.COMPILER_VERSION }}
-      run: cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DFLUX_GRAPHICS_API=OpenGL -DFLUX_ENABLE_COVERAGE=ON -B ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }} -G Ninja
+      run: cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DFLUX_GRAPHICS_API=OpenGL -DFLUX_FORCE_USE_LIBCXX=YES -DFLUX_ENABLE_COVERAGE=ON -B ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }} -G Ninja
 
     - name: Build
       # Build your program with the given configuration

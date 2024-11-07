@@ -616,6 +616,26 @@ if(FLUX_ENABLE_LTO)
 endif()
 
 #-----------------------------------------------------------------------------------------------------------------------
+# Enable code coverage.
+#-----------------------------------------------------------------------------------------------------------------------
+
+option(FLUX_ENABLE_COVERAGE "Enable code coverage" OFF)
+
+if(FLUX_ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?(C|c)?lang$")
+        set(_FLUX_COVERAGE_FLAGS " -O0 -g -fprofile-instr-generate -fcoverage-mapping \
+                                   -fno-elide-constructors -fno-inline -fno-default-inline")
+
+        string(APPEND CMAKE_C_FLAGS   ${_FLUX_COVERAGE_FLAGS})
+        string(APPEND CMAKE_CXX_FLAGS ${_FLUX_COVERAGE_FLAGS})
+
+        message(STATUS "Code coverage: ON")
+    else()
+        message(FATAL_ERROR "Code coverage is not supported by the ${CMAKE_CXX_COMPILER_ID} compiler.")
+    endif()
+endif()
+
+#-----------------------------------------------------------------------------------------------------------------------
 # Enable colored diagnostics.
 #-----------------------------------------------------------------------------------------------------------------------
 
