@@ -623,11 +623,8 @@ option(FLUX_ENABLE_COVERAGE "Enable code coverage" OFF)
 
 if(FLUX_ENABLE_COVERAGE)
     if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?(C|c)?lang$")
-        set(_FLUX_COVERAGE_FLAGS " -O0 -g -fprofile-instr-generate -fcoverage-mapping \
-                                   -fno-elide-constructors -fno-inline -fno-default-inline")
-
-        string(APPEND CMAKE_C_FLAGS   ${_FLUX_COVERAGE_FLAGS})
-        string(APPEND CMAKE_CXX_FLAGS ${_FLUX_COVERAGE_FLAGS})
+        string(APPEND CMAKE_C_FLAGS   " -O0 -g -fprofile-instr-generate -fcoverage-mapping -fno-elide-constructors -fno-inline")
+        string(APPEND CMAKE_CXX_FLAGS " -O0 -g -fprofile-instr-generate -fcoverage-mapping -fno-elide-constructors -fno-inline")
 
         message(STATUS "Code coverage: ON")
     else()
