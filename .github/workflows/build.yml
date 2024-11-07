@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       fail-fast: false
-      matrix:      
+      matrix:
         os: [ubuntu-latest]
         build_type: [Debug, Release]
         compiler:
@@ -56,7 +56,7 @@ jobs:
         env:
           CC: ${{ matrix.compiler.cc }}-${{ env.COMPILER_VERSION }}
           CXX: ${{ matrix.compiler.cxx }}-${{ env.COMPILER_VERSION }}
-        run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DFLUX_GRAPHICS_API=OpenGL -B ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }} -G Ninja
+        run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DFLUX_GRAPHICS_API=OpenGL -DFLUX_FORCE_USE_LIBCXX=YES -B ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }} -G Ninja
 
       - name: Build
         # Build your program with the given configuration
@@ -74,7 +74,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       fail-fast: false
-      matrix:      
+      matrix:
         os: [windows-latest]
         build_type: [Debug, Release]
         compiler:

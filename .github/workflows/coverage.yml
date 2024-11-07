@@ -1,6 +1,6 @@
 name: coverage
 
-on: [push, pull_request]
+on: [push]
 
 env:
   BUILD_TYPE: Debug
@@ -10,15 +10,20 @@ jobs:
     timeout-minutes: 15
     strategy:
       fail-fast: false
-      matrix:      
+      matrix:
         os: [ubuntu-latest]
         compiler:
-          - { pkg: clang, exe: 'clang++', version: 19 }
+          - { cc: clang, cxx: 'clang++' }
 
-    runs-on: ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set Environment Variables
+      uses: ./.github/actions/setvars
+      with:
+        envFilePath: ./.github/variables/versions.env
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -29,15 +34,15 @@ jobs:
     - name: Get CMake and Ninja
       uses: lukka/get-cmake@latest
       with:
-        cmakeVersion: 3.26.1
-        ninjaVersion: 1.11.1
+        cmakeVersion: ${{ env.CMAKE_VERSION }}
+        ninjaVersion: ${{ env.NINJA_VERSION }}
 
     - name: Install Clang
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{matrix.compiler.version}} main"
+        sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{ env.COMPILER_VERSION }} main"
         sudo apt update
-        sudo apt install -y llvm-${{matrix.compiler.version}} ${{matrix.compiler.pkg}}-${{matrix.compiler.version}} libc++-${{matrix.compiler.version}}-dev libc++abi-${{matrix.compiler.version}}-dev
+        sudo apt install -y llvm-${{ env.COMPILER_VERSION }} ${{ matrix.compiler.cc }}-${{ env.COMPILER_VERSION }} libc++-${{ env.COMPILER_VERSION }}-dev libc++abi-${{ env.COMPILER_VERSION }}-dev
 
     - name: Install dependencies
       run: |
@@ -47,39 +52,39 @@ jobs:
 
     - name: Configure
       env:
-        CC: ${{matrix.compiler.pkg}}-${{matrix.compiler.version}}
-        CXX: ${{matrix.compiler.exe}}-${{matrix.compiler.version}}
-      run: cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFLUX_GRAPHICS_API=OpenGL -DFLUX_FORCE_USE_LIBCXX=YES -DFLUX_ENABLE_COVERAGE=ON -B ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}} -G Ninja
+        CC: ${{ matrix.compiler.cc }}-${{ env.COMPILER_VERSION }}
+        CXX: ${{ matrix.compiler.cxx }}-${{ env.COMPILER_VERSION }}
+      run: cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DFLUX_GRAPHICS_API=OpenGL -DFLUX_ENABLE_COVERAGE=ON -B ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }} -G Ninja
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }} --config ${{ env.BUILD_TYPE }}
 
     - name: Run tests
-      working-directory: ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}}
+      working-directory: ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }}
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: ctest --timeout 30 -C Debug -j4
 
     - name: Index the raw profile
-      working-directory: ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}}
+      working-directory: ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }}
       run: |
-        llvm-profdata-${{matrix.compiler.version}} merge --output=coverage.profdata */default.profraw
+        llvm-profdata-${{ env.COMPILER_VERSION }} merge --output=coverage.profdata */default.profraw
 
     - name: Create a line-oriented coverage report
-      working-directory: ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}}
+      working-directory: ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }}
       run: |
-        object_files=$(find ./flux-*/ -type f -executable -not -path "./flux-playground/*")     
+        object_files=$(find ./flux-*/ -type f -executable -not -path "./flux-playground/*")
         object_list=("$object_files")
         objects=$(for object in ${object_list}; do echo "-object=${object} "; done)
         echo "$objects"
-        llvm-cov-${{matrix.compiler.version}} export -format=lcov -instr-profile=coverage.profdata ${objects} > coverage.lcov
+        llvm-cov-${{ env.COMPILER_VERSION }} export -format=lcov -instr-profile=coverage.profdata ${objects} > coverage.lcov
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        directory: ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}}
-        token: ${{secrets.CODECOV_TOKEN}}
+        directory: ${{ github.workspace }}/build/${{ matrix.os }}-${{ env.BUILD_TYPE }}
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.lcov
         flags: codecov
         name: flux
