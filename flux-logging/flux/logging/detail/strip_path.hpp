@@ -1,4 +1,3 @@
-// IWYU pragma: private, include "../logger.hpp"
 #pragma once
 
 namespace flux::log::detail {

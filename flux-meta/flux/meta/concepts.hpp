@@ -1,4 +1,3 @@
-// IWYU pragma: private, include "../meta.hpp"
 #pragma once
 #include <flux/meta/declval.hpp>
 #include <flux/meta/type_traits.hpp>
@@ -13,22 +12,29 @@ using ::std::common_reference_with;
 using ::std::constructible_from;
 using ::std::contiguous_iterator;
 using ::std::convertible_to;
+using ::std::copyable;
 using ::std::default_initializable;
 using ::std::derived_from;
+using ::std::equality_comparable_with;
 using ::std::forward_iterator;
+using ::std::indirectly_comparable;
 using ::std::indirectly_copyable;
 using ::std::indirectly_movable;
 using ::std::input_iterator;
 using ::std::input_or_output_iterator;
 using ::std::integral;
+using ::std::invocable;
 using ::std::movable;
 using ::std::predicate;
 using ::std::random_access_iterator;
 using ::std::same_as;
 using ::std::sentinel_for;
 using ::std::sized_sentinel_for;
+using ::std::totally_ordered_with;
+using ::std::ranges::bidirectional_range;
 using ::std::ranges::input_range;
 using ::std::ranges::range;
+using ::std::ranges::sized_range;
 
 template <typename T, ::std::size_t Size>
 concept same_size = requires { requires sizeof(T) == Size; };
@@ -61,6 +67,8 @@ concept standard_layout = ::std::is_standard_layout_v<T>;
 
 template <typename T>
 concept default_constructible = ::std::is_default_constructible_v<T>;
+template <typename T>
+concept nothrow_default_constructible = ::std::is_nothrow_default_constructible_v<T>;
 
 template <typename T>
 concept trivially_constructible = ::std::is_trivially_constructible_v<T>;
@@ -111,6 +119,10 @@ concept copy_constructible = ::std::copy_constructible<T>;
 template <typename T>
 concept move_constructible = ::std::move_constructible<T>;
 
+template <typename T>
+concept sufficiently_move_constructible =
+        nothrow_move_constructible<T> or not copy_constructible<T>;
+
 template <typename T, typename U>
 concept trivially_lexicographically_comparable =
         same_as<remove_cv_t<T>, remove_cv_t<U>> and sizeof(T) == 1 and ::std::is_unsigned_v<T>;
@@ -159,6 +171,8 @@ concept integer = ::std::integral<T> and not same_as<remove_cvref_t<T>, bool>;
 template <typename T>
 concept unsigned_integer = ::std::unsigned_integral<T> and not same_as<remove_cvref_t<T>, bool>;
 
+template <typename T>
+concept not_void = not ::std::is_void_v<T>;
 template <typename... Ts>
 concept not_volatile = (not ::std::is_volatile_v<Ts> and ...);
 
@@ -208,25 +222,33 @@ concept has_to_address = requires(T const p) { p.to_address(); } or
 template <typename T>
 concept has_arrow_operator = requires(T const p) { p.operator->(); };
 
-template <typename InputIterator, typename OutputIterator>
+template <typename OutputIterator, typename InputIterator>
 concept iter_move_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_rvref_t<InputIterator>>;
 
-template <typename InputIterator, typename OutputIterator>
+template <typename OutputIterator, typename InputIterator>
 concept iter_copy_constructible =
         constructible_from<iter_value_t<OutputIterator>, iter_ref_t<InputIterator>>;
 
+#if __has_builtin(__is_trivially_relocatable) && (defined(__cpp_impl_trivially_relocatable) ||     \
+                                                  (!defined(__clang__) && !defined(__APPLE__)))
+template <typename T>
+concept trivially_relocatable = __is_trivially_relocatable(T);
+#else
+template <typename T>
+concept trivially_relocatable = is_trivially_relocatable_v<T>;
+#endif
+
 // clang-format off
-template <typename InputIterator, typename OutputIterator>
-struct [[nodiscard]] is_memcpyable final {
-    using T = iter_value_t<OutputIterator>;
-    using U = decltype(::std::ranges::iter_move(declval<InputIterator&&>()));
+template <typename T>
+concept relocatable = move_constructible<T> and destructible<T>;
 
-    static constexpr bool value = same_as<T, remove_ref_t<U>> and trivially_copyable<T>;
-};
+template <typename T, typename U>
+concept same_trivially_relocatable =
+        not_volatile<T, U> and is_same_uncvref_v<T, U> and trivially_relocatable<remove_cvref_t<U>>;
 
-template <typename InputIterator, typename OutputIterator>
-inline constexpr bool is_memcpyable_v = is_memcpyable<InputIterator, OutputIterator>::value;
+template <typename Src, typename Dest>
+concept relocatable_from = nothrow_constructible<Dest, Src> and nothrow_destructible<Src>;
 
 template <typename T>
 concept addressable = pointer<T> or has_to_address<T> or has_arrow_operator<T>;
@@ -238,21 +260,25 @@ concept contiguous = contiguous_iterator<InputIterator >
 template <typename InputIterator, typename OutputIterator>
 concept memcpyable = contiguous     <InputIterator, OutputIterator>
                  and addressable    <OutputIterator>
-                 and is_memcpyable_v<InputIterator, OutputIterator>
-                 and not_volatile   <InputIterator, OutputIterator>;
-
-template <typename T>
-concept relocatable = move_constructible<T> and destructible<T>;
-
-template <typename T>
-concept trivially_relocatable = trivially_copyable<T>;
+                 and is_memcpyable_v<InputIterator, OutputIterator>;
 // clang-format on
 
-template <typename T, typename U>
-concept same_trivially_relocatable =
-        not_volatile<T, U> and is_same_uncvref_v<T, U> and trivially_relocatable<remove_cvref_t<U>>;
+template <typename Range, typename T>
+concept container_compatible_range = input_range<Range> and convertible_to<range_ref_t<Range>, T>;
 
-template <typename Src, typename Dest>
-concept relocatable_from = nothrow_constructible<Dest, Src> and nothrow_destructible<Src>;
+// clang-format off
+template <typename T>
+concept is_byte = same_as<T, char>
+               or same_as<T, signed char>
+               or same_as<T, unsigned char>
+               or same_as<T, ::std::byte>
+               #if defined(__cpp_char8_t)
+               or same_as<T, char8_t>
+               #endif
+               ;
+// clang-format on
+
+template <typename Fn, typename It>
+concept unary_functor = invocable<Fn, iter_ref_t<It>>;
 
 } // namespace flux::meta

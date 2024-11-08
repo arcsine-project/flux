@@ -1,4 +1,3 @@
-// IWYU pragma: private, include "../config.hpp"
 #pragma once
 
 // clang-format off

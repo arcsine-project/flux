@@ -23,6 +23,11 @@ flux_static_library(foundation
             "flux/foundation/memory/threading-test.cpp"
             "flux/foundation/memory/uninitialized_algorithms-test.cpp"
             "flux/foundation/memory/uninitialized_storage-test.cpp"
+
+            "flux/foundation/utility/iterator_adapter-test.cpp"
+
+            "flux/foundation/containers/static_vector-test.cpp"
+            "flux/foundation/containers/vector-test.cpp"
         SOURCE
             "flux/foundation/memory/detail/debug_helpers.cpp"
             "flux/foundation/memory/debugging.cpp"

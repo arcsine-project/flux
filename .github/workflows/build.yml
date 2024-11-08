@@ -6,23 +6,26 @@ on:
   pull_request:
     branches: [ "master" ]
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
   linux:
     timeout-minutes: 15
     strategy:
       fail-fast: false
-      matrix:      
+      matrix:
         os: [ubuntu-latest]
+        build_type: [Debug, Release]
         compiler:
-          - { pkg: clang, exe: 'clang++', version: 18 }
+          - { cc: clang, cxx: 'clang++' }
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        uses: ./.github/actions/setvars
+        with:
+          envFilePath: ./.github/variables/versions.env
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,15 +36,15 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
         with:
-          cmakeVersion: 3.26.1
-          ninjaVersion: 1.11.1
+          cmakeVersion: ${{ env.CMAKE_VERSION }}
+          ninjaVersion: ${{ env.NINJA_VERSION }}
 
       - name: Install Clang
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{matrix.compiler.version}} main"
+          sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{ env.COMPILER_VERSION }} main"
           sudo apt update
-          sudo apt install -y ${{matrix.compiler.pkg}}-${{matrix.compiler.version}} libc++-dev libc++abi-dev
+          sudo apt install -y ${{ matrix.compiler.cc }}-${{ env.COMPILER_VERSION }} libc++-${{ env.COMPILER_VERSION }}-dev libc++abi-${{ env.COMPILER_VERSION }}-dev
 
       - name: Install dependencies
         run: |
@@ -51,27 +54,41 @@ jobs:
 
       - name: Configure
         env:
-          CC: ${{matrix.compiler.pkg}}-${{matrix.compiler.version}}
-          CXX: ${{matrix.compiler.exe}}-${{matrix.compiler.version}}
-        run: cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFLUX_GRAPHICS_API=OpenGL -B ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}} -G Ninja
+          CC: ${{ matrix.compiler.cc }}-${{ env.COMPILER_VERSION }}
+          CXX: ${{ matrix.compiler.cxx }}-${{ env.COMPILER_VERSION }}
+        run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DFLUX_GRAPHICS_API=OpenGL -DFLUX_FORCE_USE_LIBCXX=YES -B ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }} -G Ninja
 
       - name: Build
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }} --config ${{ matrix.build_type }}
+
+      # Conditional test step for Debug builds only
+      - name: Run tests
+        if: ${{ matrix.build_type == 'Debug' }}
+        working-directory: ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }}
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+        run: ctest --timeout 30 -C Debug -j4
 
   windows:
     timeout-minutes: 15
     strategy:
       fail-fast: false
-      matrix:      
+      matrix:
         os: [windows-latest]
+        build_type: [Debug, Release]
         compiler:
-          - { pkg: clang, exe: 'clang++', version: 18 }
+          - { cc: clang, cxx: 'clang++' }
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        uses: ./.github/actions/setvars
+        with:
+          envFilePath: ./.github/variables/versions.env
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -82,20 +99,28 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
         with:
-          cmakeVersion: 3.26.1
-          ninjaVersion: 1.11.1
+          cmakeVersion: ${{ env.CMAKE_VERSION }}
+          ninjaVersion: ${{ env.NINJA_VERSION }}
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: ${{matrix.compiler.version}}
+          version: ${{ env.COMPILER_VERSION }}
 
       - name: Configure
         env:
-          CC: ${{ matrix.compiler.pkg }}
-          CXX: ${{ matrix.compiler.exe }}
-        run: cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFLUX_GRAPHICS_API=OpenGL -DFLUX_ENABLE_LTO=NO -B ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}} -G Ninja
+          CC: ${{ matrix.compiler.cc }}
+          CXX: ${{ matrix.compiler.cxx }}
+        run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DFLUX_GRAPHICS_API=OpenGL -B ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }} -G Ninja
 
       - name: Build
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build/${{matrix.os}}-${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}}
+        run: cmake --build ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }} --config ${{ matrix.build_type }}
+
+      # Conditional test step for Debug builds only
+      - name: Run tests
+        if: ${{ matrix.build_type == 'Debug' }}
+        working-directory: ${{ github.workspace }}/build/${{ matrix.os }}-${{ matrix.build_type }}
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+        run: ctest --timeout 30 -C Debug -j4

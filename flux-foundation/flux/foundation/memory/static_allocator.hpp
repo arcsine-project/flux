@@ -9,9 +9,12 @@ namespace flux::fou {
 
 // Storage for a `static_allocator`. Its constructor will take a reference to it and use it for its
 // allocation. The storage type is simply a byte array aligned for maximum alignment.
-template <::std::size_t Size> struct [[nodiscard]] static_allocator_storage final {
-    alignas(detail::max_alignment)::std::byte storage[Size];
+// clang-format off
+template <::std::size_t Size>
+struct [[nodiscard]] static_allocator_storage final {
+    alignas(detail::max_alignment) ::std::byte storage[Size];
 };
+// clang-format on
 
 // A stateful `RawAllocator` that uses a fixed sized storage for the allocations.
 // Deallocations are not supported, memory cannot be marked as freed.
@@ -50,7 +53,7 @@ private:
 };
 
 // An allocator that allocates the blocks from a fixed size storage. Deallocations are only allowed
-// in reversed order which is guaranteed by Memory_arena.
+// in reversed order which is guaranteed by `memory_arena`.
 struct [[nodiscard]] static_block_allocator {
     using size_type       = ::std::size_t;
     using difference_type = ::std::ptrdiff_t;

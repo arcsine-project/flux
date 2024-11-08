@@ -3,6 +3,7 @@
 // IWYU pragma: begin_exports
 
 #include <flux/foundation/memory/align.hpp>
+#include <flux/foundation/memory/allocate_at_least.hpp>
 #include <flux/foundation/memory/allocator_storage.hpp>
 #include <flux/foundation/memory/allocator_traits.hpp>
 #include <flux/foundation/memory/debugging.hpp>

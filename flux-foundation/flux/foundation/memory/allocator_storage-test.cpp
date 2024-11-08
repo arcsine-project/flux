@@ -61,7 +61,7 @@ void check_allocate_array(flux::fou::allocator_reference<Allocator> ref) {
 
 } // namespace
 
-static_assert(flux::fou::is_raw_allocator<::std::allocator<int>>);
+static_assert(flux::fou::is_raw_allocator_v<::std::allocator<int>>);
 
 TEST_CASE("fou::allocator_adapter", "[flux-memory/allocator_storage.hpp]") {
     using namespace flux;

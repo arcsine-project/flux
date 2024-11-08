@@ -1,10 +1,15 @@
-// IWYU pragma: private, include "../config.hpp"
 #pragma once
 
 #if __has_attribute(__no_sanitize__)
 #    define FLUX_NO_SANITIZE(...) __attribute__((__no_sanitize__(__VA_ARGS__)))
 #else
 #    define FLUX_NO_SANITIZE(...)
+#endif
+
+#if __has_attribute(__no_sanitize__)
+#    define FLUX_NO_CFI __attribute__((__no_sanitize__("cfi")))
+#else
+#    define FLUX_NO_CFI /* nothing */
 #endif
 
 #if __has_cpp_attribute(__gnu__::__always_inline__)
@@ -21,6 +26,12 @@
 #    define FLUX_STDCALL __stdcall
 #else
 #    define FLUX_STDCALL /* nothing */
+#endif
+
+#if __has_cpp_attribute(__gnu__::__may_alias__)
+#    define FLUX_MAY_ALIAS [[__gnu__::__may_alias__]]
+#else
+#    define FLUX_MAY_ALIAS /* nothing */
 #endif
 
 #if __has_cpp_attribute(msvc::no_unique_address)
