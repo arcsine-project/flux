@@ -608,7 +608,7 @@ if(FLUX_ENABLE_LTO)
         # And the same thing for Obj-C/CXX compiler...
         string(APPEND CMAKE_OBJC_FLAGS   " -flto")
         string(APPEND CMAKE_OBJCXX_FLAGS " -flto")
-        
+
         # and linker.
         string(APPEND CMAKE_OBJC_LINKER_FLAGS   " -flto")
         string(APPEND CMAKE_OBJCXX_LINKER_FLAGS " -flto")
@@ -623,8 +623,8 @@ option(FLUX_ENABLE_COVERAGE "Enable code coverage" OFF)
 
 if(FLUX_ENABLE_COVERAGE)
     if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?(C|c)?lang$")
-        string(APPEND CMAKE_C_FLAGS   " -O0 -g -fprofile-instr-generate -fcoverage-mapping -fno-elide-constructors -fno-inline")
-        string(APPEND CMAKE_CXX_FLAGS " -O0 -g -fprofile-instr-generate -fcoverage-mapping -fno-elide-constructors -fno-inline")
+        string(APPEND CMAKE_C_FLAGS   " -O0 -g -fprofile-instr-generate -fcoverage-mapping -fno-inline")
+        string(APPEND CMAKE_CXX_FLAGS " -O0 -g -fprofile-instr-generate -fcoverage-mapping -fno-inline")
 
         message(STATUS "Code coverage: ON")
     else()

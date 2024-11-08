@@ -62,6 +62,14 @@ TEST_CASE("fou::std_allocator_adapter", "[flux-memory/std_allocator.hpp]") {
         CHECK(test.deallocated_count() == 1u);
     }
 
+    SECTION("test std_default_allocator") {
+        std_default_allocator allocator;
+
+        int* ptr = allocator.allocate(1);
+        CHECK(fou::is_aligned(ptr, alignof(int)));
+        allocator.deallocate(ptr, 1);
+    }
+
     SECTION("test std_stateless_allocator") {
         std_stateless_allocator allocator;
 
